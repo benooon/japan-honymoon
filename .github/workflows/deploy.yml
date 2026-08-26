@@ -1,0 +1,87 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # lets you trigger a deploy manually from the Actions tab
+
+jobs:
+  verify:
+    name: Verify build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check server.js syntax
+        run: node --check server.js
+
+      - name: Check dashboard script syntax
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const m = html.match(/<script>\nconst DATA[\s\S]*?<\/script>/);
+          if (!m) { console.error('FAIL: dashboard script block not found'); process.exit(1); }
+          fs.writeFileSync('/tmp/app.js', m[0].replace(/^<script>/, '').replace(/<\/script>$/, ''));
+          console.log('dashboard script extracted');
+          EOF
+          node --check /tmp/app.js
+
+      - name: Validate embedded trip data
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const m = html.match(/const DATA = (\{[\s\S]*?\});\n/);
+          if (!m) { console.error('FAIL: DATA object not found'); process.exit(1); }
+          const d = JSON.parse(m[1]);
+          const problems = [];
+          if (d.days.length !== 35) problems.push(`expected 35 days, got ${d.days.length}`);
+          if (!d.budget || !d.budget.length) problems.push('budget is empty');
+          if (!d.checklist || !d.checklist.length) problems.push('checklist is empty');
+          const sum = d.budget
+            .filter(b => typeof b.nis === 'number')
+            .reduce((a, b) => a + b.nis, 0);
+          if (Math.abs(sum - d.budget_total.nis) > 1) {
+            problems.push(`budget total mismatch: rows=${sum.toFixed(2)} stated=${d.budget_total.nis}`);
+          }
+          if (problems.length) { console.error('FAIL:\n- ' + problems.join('\n- ')); process.exit(1); }
+          console.log(`OK — ${d.days.length} days, ${d.budget.length} budget rows, ${d.checklist.length} checklist items, total ₪${d.budget_total.nis}`);
+          EOF
+
+      - name: Smoke test the server
+        env:
+          SITE_PASSWORD: ci-test-password
+        run: |
+          PORT=3999 node server.js &
+          sleep 2
+          echo "--- expect 401 without auth ---"
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3999/)
+          [ "$code" = "401" ] || { echo "FAIL: unauthenticated request returned $code, expected 401"; exit 1; }
+          echo "--- expect 200 with auth ---"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -u any:ci-test-password http://localhost:3999/)
+          [ "$code" = "200" ] || { echo "FAIL: authenticated request returned $code, expected 200"; exit 1; }
+          echo "--- expect 200 on /health ---"
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3999/health)
+          [ "$code" = "200" ] || { echo "FAIL: health returned $code"; exit 1; }
+          echo "all smoke tests passed"
+
+  deploy:
+    name: Deploy
+    needs: verify
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service "${{ secrets.RAILWAY_SERVICE }}" --detach

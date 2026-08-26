@@ -1,0 +1,13 @@
+{
+  "name": "honeymoon-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ben & Ronit honeymoon dashboard — Japan + Thailand, Aug–Oct 2026",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

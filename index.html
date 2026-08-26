@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ירח דבש · בן ורונית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --ink:#12131a; --ink2:#454a57; --muted:#8b90a0; --line:#e8e9ee; --line2:#f1f2f6;
+  --bg:#f7f7f9; --card:#fff;
+  --jp:#6b5bd2; --th:#0a9ba8; --accent:#e0526e;
+  --ok:#0f9d68; --okbg:#e8f7f0; --warn:#c77700; --warnbg:#fdf3e3;
+  --r:16px; --r-sm:12px;
+  --sh:0 1px 2px rgba(18,19,26,.05),0 4px 16px rgba(18,19,26,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',-apple-system,sans-serif;background:var(--bg);color:var(--ink);
+  line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px 100px}
+
+/* ===== TOP BAR ===== */
+.topbar{position:sticky;top:0;z-index:60;background:rgba(247,247,249,.88);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+.tb-in{max-width:820px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 0 10px}
+.tb-title{font-weight:800;font-size:17px;letter-spacing:-.2px}
+.tb-sub{font-size:12.5px;color:var(--muted);font-weight:500}
+.tb-count{margin-right:auto;background:var(--ink);color:#fff;border-radius:30px;padding:6px 13px;
+  font-size:12.5px;font-weight:700;white-space:nowrap}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink2);font-family:inherit;
+  font-weight:600;font-size:13.5px;padding:8px 15px;border-radius:30px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{border-color:var(--muted)}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.view{display:none;animation:fade .3s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== DATE PILL STRIP (Wanderlog pattern) ===== */
+.daystrip{display:flex;gap:6px;overflow-x:auto;padding:12px 0;scrollbar-width:none;
+  position:sticky;top:47px;z-index:50;background:rgba(247,247,249,.92);backdrop-filter:blur(10px);margin:0 -16px;padding-right:16px;padding-left:16px}
+.daystrip::-webkit-scrollbar{display:none}
+.dpill{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:12px;
+  padding:7px 11px;cursor:pointer;text-align:center;min-width:54px;transition:.15s}
+.dpill:hover{border-color:var(--muted)}
+.dpill.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.dpill b{display:block;font-size:15px;font-weight:800;line-height:1.1}
+.dpill span{font-size:10.5px;font-weight:600;opacity:.7}
+
+/* ===== REGION HEADER ===== */
+.reg{display:flex;align-items:center;gap:10px;margin:26px 0 4px}
+.reg-dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+.reg h2{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.reg .n{font-size:12.5px;color:var(--muted);font-weight:600;margin-right:auto;white-space:nowrap}
+
+/* ===== TIMELINE (Pangea pattern) ===== */
+.tl{position:relative;padding-right:74px}
+.tl::before{content:"";position:absolute;top:8px;bottom:8px;right:26px;width:2px;background:var(--line)}
+.day{position:relative;margin-bottom:14px;scroll-margin-top:110px}
+.day-rail{position:absolute;right:-74px;top:0;width:66px;text-align:center}
+.day-node{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--jp);margin:5px auto 0;
+  position:relative;right:-19px;z-index:2}
+.day-rail .rl{font-size:10.5px;font-weight:700;color:var(--muted);margin-top:5px;line-height:1.25}
+.day-rail .rt{font-size:13px;font-weight:800;color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.dhead{display:flex;align-items:flex-start;gap:11px;padding:14px 15px;cursor:pointer}
+.dhead:hover{background:#fbfbfc}
+.dnum{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--line2);color:var(--ink2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;line-height:1}
+.dnum b{font-size:14px}
+.dnum span{font-size:8px;font-weight:700;opacity:.6;letter-spacing:.3px}
+.dmain{flex:1;min-width:0}
+.dtop{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.dtop .dest{font-size:15.5px;font-weight:800;letter-spacing:-.2px}
+.dwhen{font-size:12.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.dhotel{font-size:13px;color:var(--ink2);font-weight:600;margin-top:5px;display:flex;align-items:center;gap:6px}
+.chev{flex:0 0 auto;color:var(--muted);font-size:13px;transition:.25s;margin-top:9px}
+.day.open .chev{transform:rotate(180deg)}
+.dbody{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.dbody-in{padding:0 15px 15px}
+
+/* badges */
+.bdg{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;letter-spacing:.1px}
+.bdg.ok{background:var(--okbg);color:var(--ok)}
+.bdg.warn{background:var(--warnbg);color:var(--warn)}
+.bdg.fly{background:#eeecfb;color:var(--jp)}
+.bdg.bf{background:#e8f7f0;color:var(--ok)}
+.bdg.nobf{background:var(--line2);color:var(--muted)}
+
+/* ===== CONFIRMATION BOX (Booking.com pattern) ===== */
+.confbox{border:1px solid #cfe9db;background:#f4fbf7;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:11px}
+.confbox.warnbox{border-color:#f0ddba;background:var(--warnbg)}
+.confrow{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink2)}
+.confrow+.confrow{margin-top:5px}
+.confrow b{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.cbtn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--jp);font-family:inherit;font-weight:700;padding:2px 5px;border-radius:5px}
+.cbtn:hover{background:#eeecfb}
+.cbtn.done{color:var(--ok)}
+
+/* ===== CHECK-IN / OUT COLUMNS (Shangri-La pattern) ===== */
+.inout{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-bottom:11px}
+.inout>div{flex:1;padding:10px 12px}
+.inout>div+div{border-right:1px solid var(--line)}
+.inout .lab{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.3px}
+.inout .big{font-size:17px;font-weight:800;margin-top:1px;letter-spacing:-.3px}
+.inout .tm{font-size:12px;color:var(--ink2);font-weight:600}
+
+/* ===== DETAIL GRID (Navan pattern) ===== */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:11px 14px;
+  padding:11px 0;border-top:1px solid var(--line2)}
+.dgrid .k{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.3px}
+.dgrid .v{font-size:13.5px;font-weight:700;margin-top:1px}
+.dgrid .v.sm{font-size:12.5px;font-weight:600;color:var(--ink2)}
+
+/* ===== ACTION CHIP ROW (Pangea/Hyatt pattern) ===== */
+.acts{display:flex;gap:7px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line2)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);
+  border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:none;
+  cursor:pointer;font-family:inherit;transition:.15s}
+.chip:hover{border-color:var(--jp);color:var(--jp)}
+
+/* ===== INFO BLOCKS ===== */
+.blk{padding:11px 0;border-top:1px solid var(--line2)}
+.blk .bt{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.3px;margin-bottom:4px}
+.blk .bc{font-size:13.5px;color:var(--ink2);line-height:1.55}
+.note{background:var(--warnbg);border:1px solid #f0ddba;border-radius:var(--r-sm);padding:9px 12px;
+  font-size:12.5px;color:#8a6a2f;margin-top:10px;font-weight:600}
+
+/* ===== FLIGHT STRIP (Air NZ pattern) ===== */
+.fly{background:linear-gradient(115deg,#514296,#7b6ad6);border-radius:var(--r-sm);padding:13px 15px;color:#fff;margin-bottom:11px}
+.fly-t{font-size:11px;font-weight:700;opacity:.8;letter-spacing:.4px;margin-bottom:9px;display:flex;justify-content:space-between}
+.fly-r{display:flex;align-items:center;gap:12px}
+.fly-r .ap{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.fly-r .tm{font-size:11.5px;opacity:.85;font-weight:600;margin-top:1px}
+.fly-r .mid{flex:1;text-align:center;font-size:10.5px;opacity:.8;font-weight:700}
+.fly-r .mid::before{content:"";display:block;height:1px;background:rgba(255,255,255,.35);margin-bottom:4px}
+.fly-code{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.95}
+.fly-code b{font-weight:800;letter-spacing:.4px}
+.fly-code .cbtn{color:#fff}
+.fly-code .cbtn:hover{background:rgba(255,255,255,.15)}
+
+/* ===== STATS / PANELS ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:700}
+.stat .v{font-size:22px;font-weight:800;margin-top:3px;letter-spacing:-.5px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.panel h3{font-size:14.5px;font-weight:800;margin-bottom:2px}
+.panel .ps{font-size:12.5px;color:var(--muted);margin-bottom:14px;font-weight:500}
+.sec{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin:24px 0 10px}
+
+/* ===== CHECKLIST ===== */
+.pbar{height:8px;background:var(--line2);border-radius:20px;overflow:hidden;margin-top:9px}
+.pbar i{display:block;height:100%;background:var(--ok);border-radius:20px;transition:width .5s}
+.ck{display:flex;align-items:flex-start;gap:11px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:12px 14px;margin-bottom:7px;cursor:pointer;transition:.12s}
+.ck:hover{border-color:var(--muted)}
+.ck .box{flex:0 0 20px;width:20px;height:20px;border-radius:6px;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:1px;transition:.15s}
+.ck.done .box{background:var(--ok);border-color:var(--ok)}
+.ck .t{flex:1}
+.ck .t .tt{font-size:13.5px;font-weight:700}
+.ck.done .t .tt{text-decoration:line-through;color:var(--muted);font-weight:600}
+.ck .t .tn{font-size:12px;color:var(--muted);margin-top:2px}
+.dl{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;align-self:center}
+.dl.u{background:#fdeaee;color:var(--accent)}
+.dl.s{background:var(--warnbg);color:var(--warn)}
+.dl.c{background:var(--line2);color:var(--muted)}
+
+/* ===== BUDGET ===== */
+.bcat{border:1px solid var(--line);background:var(--card);border-radius:var(--r-sm);margin-bottom:8px;overflow:hidden}
+.bch{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer;font-weight:800;font-size:14px}
+.bch:hover{background:#fbfbfc}
+.bci{display:none;padding:0 15px 8px}
+.bcat.open .bci{display:block}
+.bi{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line2);font-size:13px}
+.bi .n{flex:1;font-weight:600;color:var(--ink2)}
+.bi .n s{display:block;font-size:11.5px;color:var(--muted);text-decoration:none;font-weight:500;margin-top:1px}
+.bi .a{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.total{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px 20px;display:flex;
+  justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.total .l{font-size:12.5px;opacity:.7;font-weight:600}
+.total .v{font-size:27px;font-weight:800;letter-spacing:-.6px}
+
+/* ===== MAP ===== */
+#mapEl{height:66vh;min-height:400px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);z-index:1}
+.mlg{display:flex;flex-wrap:wrap;gap:8px 15px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:12px 15px;margin-top:11px;font-size:12.5px;font-weight:600}
+.mlg span{display:flex;align-items:center;gap:6px}
+.mlg i{width:11px;height:11px;border-radius:50%}
+.map-pin{display:flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);box-shadow:0 2px 5px rgba(0,0,0,.3);border:2px solid #fff;font-weight:800;color:#fff;font-size:11px}
+.map-pin b{transform:rotate(45deg)}
+.poi-food{width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:#fff;
+  border:2px solid var(--accent);border-radius:50%;font-size:10px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.leaflet-popup-content{font-family:'Heebo',sans-serif;direction:rtl;text-align:right;margin:11px 13px;font-size:13px}
+.pop-t{font-weight:800;font-size:14.5px}
+.pop-s{font-size:11.5px;color:var(--muted);margin:2px 0 6px;font-weight:600}
+.pop-r{font-size:12.5px;margin:2px 0;font-weight:600;color:var(--ink2)}
+.pop-go{display:inline-block;margin-top:8px;background:var(--ink);color:#fff;text-decoration:none;
+  font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:8px}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="tb-in">
+      <div>
+        <div class="tb-title">ירח דבש · בן &amp; רונית</div>
+        <div class="tb-sub">יפן → תאילנד · 27 אוג׳ – 1 אוק׳ 2026</div>
+      </div>
+      <div class="tb-count" id="cd"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-v="trip">מסלול</button>
+      <button class="tab" data-v="wallet">אישורים</button>
+      <button class="tab" data-v="map">מפה</button>
+      <button class="tab" data-v="prep">הכנות</button>
+      <button class="tab" data-v="money">תקציב</button>
+    </div>
+  </div>
+
+  <section class="view active" id="trip">
+    <div class="daystrip" id="daystrip"></div>
+    <div id="tripList"></div>
+  </section>
+
+  <section class="view" id="wallet"><div id="walletC"></div></section>
+
+  <section class="view" id="map">
+    <div class="tabs" id="mapf" style="padding-top:14px"></div>
+    <div id="mapEl"></div>
+    <div class="mlg" id="mlg"></div>
+  </section>
+
+  <section class="view" id="prep">
+    <div class="panel" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <h3>ההכנות שלכם</h3><span id="pcnt" style="font-size:12.5px;color:var(--muted);font-weight:700"></span>
+      </div>
+      <div class="pbar"><i id="pbar"></i></div>
+    </div>
+    <div class="tabs" id="pf"></div>
+    <div id="pList"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="chip" id="preset">↺ איפוס הסימונים</button>
+    </div>
+  </section>
+
+  <section class="view" id="money">
+    <div class="panel" style="margin-top:16px"><h3>לפי קטגוריה</h3><div class="ps">היכן הולך הכסף</div>
+      <canvas id="bch" height="230"></canvas></div>
+    <div id="bList"></div>
+    <div class="total"><div><div class="l">סה"כ מוערך</div><div style="font-size:11.5px;opacity:.55;margin-top:2px">כולל הערכות אוכל, קניות ופעילויות</div></div>
+      <div class="v" id="gt"></div></div>
+  </section>
+
+  <div class="foot">הסימונים נשמרים במכשיר הזה · עוצב בהשראת Agoda · Pangea · Wanderlog · Booking.com</div>
+</div>
+
+<script>
+const DATA = {
+ "title": "✈  ירח דבש – בן ורונית  |  יפן + תאילנד  |  אוג׳–אוק׳ 2026  🌸",
+ "subtitle": "35 יום  •  8 יעדים ביפן  •  3 איים תאיים  •  בנגקוק",
+ "days": [
+  {
+   "day": 1,
+   "date": "2026-08-27",
+   "dow": "חמישי",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "אוטובוס משדה התעופה לשינג'וקו (~שעה)",
+   "activities": "הגעה ומנוחה. טיול ערב בשכונת שינג'וקו – רחוב קבוקיצ'ו המוצף ניאון ובתי הג'אז הקטנים של גולדן גאי.",
+   "restaurants": "אומואידה יוקוצ'ו ('סמטת הזיכרון') – יקיטורי על גחלים תחת פנסים מהממים",
+   "price_orig": "—",
+   "price_nis": 4300.0,
+   "notes": null,
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 2,
+   "date": "2026-08-28",
+   "dow": "שישי",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "רכבת עיר / הליכה",
+   "activities": "מקדש סנסו-ג'י עם שחר (לפני ההמון!). רחוב הנקאמיסה לקניות. אקיהאברה. TeamLab Planets – להזמין מראש!",
+   "restaurants": "Sometaro (אסקוסה) – אוקונומיאקי DIY על השולחן | Afuri Ramen – ראמן יוזו עדין",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "להזמין כרטיסי TeamLab Planets אונליין מראש",
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 3,
+   "date": "2026-08-29",
+   "dow": "שבת",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "רכבת עיר / הליכה",
+   "activities": "מקדש מייג'י (הליכה ביער שקטה ורומנטית). הרג'וקו ורחוב טקשיטה (אופנה קיצונית). מעבר הסמפונות של שיבויה. גג Shibuya Sky בשקיעה.",
+   "restaurants": "Ichiran Ramen – ראמן טונקוצו בתאים אישיים (חוויה ייחודית!) | גונפאצ'י ניישי-אזאבו",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "להזמין Shibuya Sky אונליין",
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 4,
+   "date": "2026-08-30",
+   "dow": "ראשון",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "רכבת עיר / הליכה",
+   "activities": "teamLab Borderless אזאבודאי (אמנות דיגיטלית אינטראקטיבית – חובה להזמין!). גבעת רופונגי ומוזיאון מורי. קניות ביוקרה בגינזה.",
+   "restaurants": "אומאקאסה (מסעדת שף) בגינזה – חוויית חיים | Bar High Five – קוקטיילים ברמה עולמית",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "להזמין teamLab Borderless מראש",
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 5,
+   "date": "2026-08-31",
+   "dow": "שני",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "רכבת עיר / הליכה",
+   "activities": "גן לאומי שינג'וקו גיוֶן (טיול רומנטי בין העצים). שכונת שימוקיטאזאווה הוינטג' (חנויות ממש ייחודיות). לילה בגולדן גאי – בריזה ובמבוק.",
+   "restaurants": "נאריסאווה – מסעדה ברמה עולמית עם מטבח יפני בר-קיימא (להזמין חודשים מראש!) | Kozue במלון Park Hyatt",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 6,
+   "date": "2026-09-01",
+   "dow": "שלישי",
+   "dest": "טוקיו",
+   "hotel": "GINZA HOTEL by GRANBELL",
+   "transport": "מטרו → אודאיבה (קו יוריקאמומה או מעבורת)",
+   "activities": "אודאיבה – גשר הקשת ונוף על ים טוקיו. קניות ב-DiverCity. לחזור ולארוז לקראת יציאה מוקדמת במסלול ה-Romancecar.",
+   "restaurants": "מגורו-איזאקאיה (אודאיבה) – טונה טרייה בכל הצורות | Tokyo Ramen Street – מרתף תחנת טוקיו",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🗼 טוקיו  |  5 לילות  (27 אוג׳ – 1 ספט׳)"
+  },
+  {
+   "day": 7,
+   "date": "2026-09-02",
+   "dow": "רביעי",
+   "dest": "האקונה",
+   "hotel": "Gora Kansuiro (ריוקן עם אונסן פרטי)",
+   "transport": "Romancecar משינג'וקו (~שעה וחצי) – רכבת הרים ציורית",
+   "activities": "מוזיאון הפסל הפתוח (Hakone Open-Air Museum) – פסלים בטבע מרהיב. שייט באגם אשי עם נוף להר פוג'י. רכבל מעל הר הגעש Owakudani. ערב אונסן פרטי בריוקן. ארוחת קאיסקי מסורתית.",
+   "restaurants": "ארוחת קאיסקי כלולה בריוקן (רב-קורסים, חוויית חיים!) | מאפיית האקונה – מאפים בבוקר",
+   "price_orig": "—",
+   "price_nis": 1675.0,
+   "notes": "הריוקן כולל ארוחת בוקר וערב",
+   "region": "⛰️ האקונה  |  לילה אחד  (2 ספט׳)  – הר פוג׳י ואונסן פרטי בריוקן"
+  },
+  {
+   "day": 8,
+   "date": "2026-09-03",
+   "dow": "חמישי",
+   "dest": "מצומוטו",
+   "hotel": "Matsumoto Jujo (בוטיק + ארוחת בוקר)",
+   "transport": "רכב שכור מאזור האקונה (~3 שעות נסיעה)",
+   "activities": "טירת מצומוטו ('טירת העורב השחור' – אחת היפות ביפן!). רחוב נאווטה שוק הצפרדע. טיול לאורך נהר מטובה בשקיעה.",
+   "restaurants": "Kura (מצומוטו) – סובא וטמפורה במחסן קסום | קפה מארומו בבניין היסטורי",
+   "price_orig": "¥60,500",
+   "price_nis": 1209.0,
+   "notes": "הזמנה: 3350-3129-4462",
+   "region": "🏔️ האלפים היפניים  |  3 לילות  (3–5 ספט׳)"
+  },
+  {
+   "day": 9,
+   "date": "2026-09-04",
+   "dow": "שישי",
+   "dest": "קאמיקוצ'י",
+   "hotel": "Wanosato (מלון הרים)",
+   "transport": "נסיעה ~שעה וחצי (חניה בסאוואנדו ← אוטובוס חובה לתוך קאמיקוצ'י)",
+   "activities": "גשר קאפאבאשי (הנוף האייקוני – הרים ונהר). בריכת טאישו (השתקפויות). מסלול הליכה לבריכת מיוג'ין (שעתיים הלוך-חזור). צפייה בקופים וצבאים בטבע פראי.",
+   "restaurants": "ארוחת בנטו מ-Gosenjaku Lodge (לארוז לשביל) | ארוחת קאיסקי ערב כלולה בוואנוסאטו",
+   "price_orig": "¥75,240",
+   "price_nis": 1494.0,
+   "notes": null,
+   "region": "🏔️ האלפים היפניים  |  3 לילות  (3–5 ספט׳)"
+  },
+  {
+   "day": 10,
+   "date": "2026-09-05",
+   "dow": "שבת",
+   "dest": "קנאזאווה",
+   "hotel": "Hotel Kanazawa Zoushi",
+   "transport": "נסיעה ~שעתיים וחצי עם עצירה בשירקאווה-גו",
+   "activities": "עצירה בכפר שירקאווה-גו (בתי קש מסורתיים, אתר UNESCO מדהים). הגעה לקנאזאווה. גן קנרוקו-אן (אחד 3 הגנים הגדולים ביפן). שכונת גיישות היגאשי בין-שמשות.",
+   "restaurants": "שוק אומיצ'ו בצהריים – פירות ים טריים מים יפן | Itaru Honten – סאקה מקומי ומנות קטנות",
+   "price_orig": "¥41,661",
+   "price_nis": 466.0,
+   "notes": null,
+   "region": "🏔️ האלפים היפניים  |  3 לילות  (3–5 ספט׳)"
+  },
+  {
+   "day": 11,
+   "date": "2026-09-06",
+   "dow": "ראשון",
+   "dest": "קנאזאווה",
+   "hotel": "Hotel Kanazawa Zoushi",
+   "transport": "הליכה / אוטובוס מקומי",
+   "activities": "מוזיאון לאמנות עכשווית של המאה ה-21 (חדר הבריכה האייקוני!). פארק טירת קנאזאווה. שכונות גיישות ניישי וקאזואמאצ'י. חיי לילה ב-Katamachi.",
+   "restaurants": "מיוישיאן (בתוך גן קנרוקו-אן) – ארוחת קאיסקי צהריים | Tamazushi – סושי בסגנון קנאזאווה עם דגים מים יפן",
+   "price_orig": "¥41,661",
+   "price_nis": 466.0,
+   "notes": null,
+   "region": "🏔️ האלפים היפניים  |  3 לילות  (3–5 ספט׳)"
+  },
+  {
+   "day": 12,
+   "date": "2026-09-07",
+   "dow": "שני",
+   "dest": "קיוטו",
+   "hotel": "Ace Hotel Kyoto",
+   "transport": "שינקנסן / רכבת מהירה מקנאזאווה (~שעתיים וחצי)",
+   "activities": "הגעה וצ'ק-אין. טיול ערב בגיון – לנסות לצפות בגיישות/מאיקו. סמטת פונטוצ'ו האידילית לאורך נהר קאמו. מקדש יאסאקה בלילה.",
+   "restaurants": "מסעדות סמטת פונטוצ'ו (עם נוף נגדי לנהר) | גיון נאנבה – קאיסקי מסורתי",
+   "price_orig": "¥135,027",
+   "price_nis": 3634.0,
+   "notes": null,
+   "region": "⛩️ קנאזאווה + קיוטו  |  5 לילות  (6–10 ספט׳)"
+  },
+  {
+   "day": 13,
+   "date": "2026-09-08",
+   "dow": "שלישי",
+   "dest": "קיוטו",
+   "hotel": "Ace Hotel Kyoto",
+   "transport": "הליכה / אוטובוס מקומי",
+   "activities": "פושימי אינארי – 10,000 שערי טוריי (לצאת בזריחה – קסום לפני ההמון!). שוק ניישיקי ('המטבח של קיוטו'). פביליון הזהב קינקאקו-ג'י. טירת ניג'ו.",
+   "restaurants": "שוק ניישיקי – טעימות ברחוב: שיפודים, טופו, מוצ'י | Tosuiro – ארוחת טופו מסורתית",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "לצאת לפושימי אינארי בשעה 6:00 בבוקר!",
+   "region": "⛩️ קנאזאווה + קיוטו  |  5 לילות  (6–10 ספט׳)"
+  },
+  {
+   "day": 14,
+   "date": "2026-09-09",
+   "dow": "רביעי",
+   "dest": "קיוטו",
+   "hotel": "Ace Hotel Kyoto",
+   "transport": "קו JR לסאגאנו / ארשיאמה",
+   "activities": "חורשת הבמבוק של ארשיאמה (בבוקר – לפני ההמון). פארק הקופים ב-Iwatayama (נוף פנורמי). גן הזן של טנריו-ג'י. רכבת הנוף הסגנוניסטית של סאגאנו (אופציה). וילת אוקוצ'י-סאנסו.",
+   "restaurants": "Arashiyama Yoshimura – סובא עם נוף לחורשת הבמבוק | Café Kocsi – עוגות ומאצ'ה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "⛩️ קנאזאווה + קיוטו  |  5 לילות  (6–10 ספט׳)"
+  },
+  {
+   "day": 15,
+   "date": "2026-09-10",
+   "dow": "חמישי",
+   "dest": "קיוטו",
+   "hotel": "Ace Hotel Kyoto",
+   "transport": "JR ~45 דק לכל כיוון לנארה",
+   "activities": "טיול יום לנארה: מקדש טודאי-ג'י (הבודהה הענק). להאכיל את הצבאים הפראיים בנארה פארק (חמוד מטורף!). מקדש קאסוגה. חזרה לקיוטו – טיול על שביל הפילוסוף בשקיעה.",
+   "restaurants": "Yoshikawa (נארה) – סושי עלי אדר (תמצית מקומית) | אומן ניינן-זאקה (קיוטו) – אודון עבות",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "לקנות עוגיות צבי בכניסה לפארק",
+   "region": "⛩️ קנאזאווה + קיוטו  |  5 לילות  (6–10 ספט׳)"
+  },
+  {
+   "day": 16,
+   "date": "2026-09-11",
+   "dow": "שישי",
+   "dest": "קוראשיקי",
+   "hotel": "Nagi Kurashiki Hotel & Suites",
+   "transport": "שינקנסן קיוטו → קוראשיקי (~שעה)",
+   "activities": "הרובע ההיסטורי ביקאן (תעלות עם ערבות בוכות, בניינים לבנים – ציורי). בית אוהאשי (אחוזת סאמוראי). מתחם אייבי סקוור. מוזיאון מלאכת עם יפנית.",
+   "restaurants": "בית קפה El Greco (בנין מיוחל מ-1959 מכוסה קיסוס) | Tsurugata – מטבח אוקאיאמה מקומי",
+   "price_orig": "—",
+   "price_nis": 552.0,
+   "notes": null,
+   "region": "🎨 איי האמנות (סטואיצ'י)  |  3 לילות  (11–13 ספט׳)"
+  },
+  {
+   "day": 17,
+   "date": "2026-09-12",
+   "dow": "שבת",
+   "dest": "נאושימה",
+   "hotel": "SANAMANE",
+   "transport": "JR לנמל אונו + מעבורת ~20 דק לנאושימה",
+   "activities": "מוזיאון צ'יצ'ו (ציורי מוֹנה בחלל תת-קרקעי – חוויה רוחנית). הדלעת הצהובה של יאיוי קוסאמה. מוזיאון בנסה הוס. Art House Project – כפר שלם כיצירת אמנות.",
+   "restaurants": "מסעדת בנסה הוס (נוף לים הפנימי של יפן) | Café Salon Naka-Oku – קפה כפרי על האי",
+   "price_orig": "¥109,400",
+   "price_nis": 2200.0,
+   "notes": "להזמין כניסה מוגבלת לצ'יצ'ו מראש",
+   "region": "🎨 איי האמנות (סטואיצ'י)  |  3 לילות  (11–13 ספט׳)"
+  },
+  {
+   "day": 18,
+   "date": "2026-09-13",
+   "dow": "ראשון",
+   "dest": "נאושימה",
+   "hotel": "SANAMANE",
+   "transport": "מעבורת ~25 דק בין נאושימה לטשימה",
+   "activities": "מוזיאון האמנות של טשימה (אדריכלות טיפת מים – שקט מדיטטיבי). בית יוקו של טשימה (פסיכדלי ומרתק). מוזיאון לי אופאן. שקיעה ב-Minamidera.",
+   "restaurants": "קפה באי טשימה – תמנון טרי מקומי | ארוחת ערב בבנסה הוס עם נוף השקיעה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🎨 איי האמנות (סטואיצ'י)  |  3 לילות  (11–13 ספט׳)"
+  },
+  {
+   "day": 19,
+   "date": "2026-09-14",
+   "dow": "שני",
+   "dest": "אוסקה",
+   "hotel": "HOTEL THE LEBEN OSAKA",
+   "transport": "מעבורת לנמל אונו + שינקנסן/JR לאוסקה (~שעתיים וחצי)",
+   "activities": "הגעה לאוסקה. דוטנבורי – שלטי ניאון ענקיים (כולל הסרטן המפורסם!). שוק קורומון ('המטבח של אוסקה'). פארק טירת אוסקה. אמריקמורה – שכונת הצעירים.",
+   "restaurants": "אוכל רחוב בדוטנבורי: טקויאקי (כדורי תמנון), אוקונומיאקי, קושיקאצו | Kureha – שאבו שאבו ואגיו",
+   "price_orig": "—",
+   "price_nis": 1372.0,
+   "notes": null,
+   "region": "🏙️ אוסקה  |  2 לילות  (14–15 ספט׳)"
+  },
+  {
+   "day": 20,
+   "date": "2026-09-15",
+   "dow": "שלישי",
+   "dest": "אוסקה",
+   "hotel": "HOTEL THE LEBEN OSAKA",
+   "transport": "מטרו אוסקה / הליכה",
+   "activities": "מוזיאון בטירת אוסקה. שינסקאי ומגדל צוטנקאקו (שכונה רטרו מגניבה). סמטת הוזנג'י. קניות אחרונות בנאמבה. ארוחת ערב אחרונה ביפן – להתייחד עם המסע.",
+   "restaurants": "Matsuri (נאמבה) – הקושיקאצו הכי טוב באוסקה | Sushi no Musashi – סושי על סרט נע טרי ומהנה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "טיסה יוצאת ב-16.9",
+   "region": "🏙️ אוסקה  |  2 לילות  (14–15 ספט׳)"
+  },
+  {
+   "day": 21,
+   "date": "2026-09-16",
+   "dow": "רביעי",
+   "dest": "טיסה",
+   "hotel": "—",
+   "transport": "טיסת לילה אוסקה → בנגקוק / קו סמוי",
+   "activities": "טיסת לילה. לישון ולחלום על האיים שמחכים לכם...",
+   "restaurants": "טרקלין בשדה תעופה (אם יש Priority Pass) | נשנושים על הסיפון",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🌙 טיסת לילה  |  16 ספט׳"
+  },
+  {
+   "day": 22,
+   "date": "2026-09-17",
+   "dow": "חמישי",
+   "dest": "קו סמוי",
+   "hotel": "Six Senses Samui",
+   "transport": "הגעה + העברה למלון",
+   "activities": "הגעה לגן עדן. צ'ק-אין ל-Six Senses. יום של ים, בריכה וספא. שקיעה בחוף צ'ואנג-מון. קוקטיילים פתיחה.",
+   "restaurants": "מסעדות Six Senses (הכל ברמה עולמית) | Barracuda (בופוט) – פירות ים ים-תיכוניים על החוף",
+   "price_orig": "—",
+   "price_nis": 4843.0,
+   "notes": null,
+   "region": "🌴 קו סמוי  |  3 לילות  (17–19 ספט׳)  – Six Senses"
+  },
+  {
+   "day": 23,
+   "date": "2026-09-18",
+   "dow": "שישי",
+   "dest": "קו סמוי",
+   "hotel": "Six Senses Samui",
+   "transport": "סירת שכור (לסדר דרך המלון)",
+   "activities": "טיול יום בסירה לפארק הלאומי הימי Ang Thong – שנורקל, קיאקים במערות ים, לגון אמרלד מדהים. חלופה: מפל Na Muang + מקדש בודהה הגדול.",
+   "restaurants": "שוק לילה של כפר הדייגים (בופוט) – ברביקיו פירות ים על החוף | Mr. Lemon – מסעדה מקומית נסתרת",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "לסדר טיול מארגן דרך Six Senses",
+   "region": "🌴 קו סמוי  |  3 לילות  (17–19 ספט׳)  – Six Senses"
+  },
+  {
+   "day": 24,
+   "date": "2026-09-19",
+   "dow": "שבת",
+   "dest": "קו סמוי",
+   "hotel": "Six Senses Samui",
+   "transport": "טקסי למזח המעבורת",
+   "activities": "מקדש הבודהה הגדול בבוקר. מועדון חוף צ'ווונג (Ark Bar / O'Soleil) בצהריים. שוק לילה של סמוי לסובנירים. מעבורת ערב לקו פנגן.",
+   "restaurants": "The Larder (צ'ווונג) – ארוחת בוקר מפנקת | Hemingway's on the Beach – קוקטיילים בשקיעה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🌴 קו סמוי  |  3 לילות  (17–19 ספט׳)  – Six Senses"
+  },
+  {
+   "day": 25,
+   "date": "2026-09-20",
+   "dow": "ראשון",
+   "dest": "קו פנגן",
+   "hotel": "Kupu Kupu Phangan",
+   "transport": "מעבורת מסמוי ~30 דק",
+   "activities": "הגעה לקו פנגן. צ'ק-אין. חוף תונג נאי פאן יאי (היפה ביותר באי – מבודד ומושלם). שנורקל ב-Haad Yuan. שקיעה מ-Bottle Beach.",
+   "restaurants": "Sanctuary (Haad Tian) – קפה אורגני בסגנון יוגה | Same Same (תונג סאלה) – פאד תאי וקוקוס טרי",
+   "price_orig": "THB 63,270",
+   "price_nis": 6139.0,
+   "notes": null,
+   "region": "🌊 קו פנגן  |  5 לילות  (20–24 ספט׳)"
+  },
+  {
+   "day": 26,
+   "date": "2026-09-21",
+   "dow": "שני",
+   "dest": "קו פנגן",
+   "hotel": "Kupu Kupu Phangan",
+   "transport": "סירת לונגטייל / טקסי",
+   "activities": "מפל Than Sadet (אתר רחצה מלכותי – לשחות בבריכות!). חוף האד רין (שקט ויפה ללא המון). שיעור יוגה או עיסוי תאי מסורתי.",
+   "restaurants": "Bubba's Coffee Bar (שריתאנו) – מקום חברה | Arina (באן טאי) – פירות ים טריים מהים",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🌊 קו פנגן  |  5 לילות  (20–24 ספט׳)"
+  },
+  {
+   "day": 27,
+   "date": "2026-09-22",
+   "dow": "שלישי",
+   "dest": "קו פנגן",
+   "hotel": "Kupu Kupu Phangan",
+   "transport": "סירת לונגטייל",
+   "activities": "טיול יום לאי קו מה – שנורקל (אי קטן נגיש בשפל הגאות – גן עדן!). חוף מאה האד. כפר בוהמי שריתאנו – סטודיות יוגה וחנויות קריסטל.",
+   "restaurants": "Dots (שריתאנו) – קערות בריאות טעימות | La Cave (האד רין) – בר יין עם נוף לים",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🌊 קו פנגן  |  5 לילות  (20–24 ספט׳)"
+  },
+  {
+   "day": 28,
+   "date": "2026-09-23",
+   "dow": "רביעי",
+   "dest": "קו פנגן",
+   "hotel": "Kupu Kupu Phangan",
+   "transport": "סירת מהירה",
+   "activities": "טיול יום לקו טאו לצלילה/שנורקל (30 דק בסירה – Japanese Gardens – שוניות אלמוגים מדהימות!). חלופה: יום ספא זוגי + רביצה בהמוק על החוף.",
+   "restaurants": "The Gallery (תונג סאלה) – תאי אמיתי ומקומי | Pirates Bar (צ'לוקלאם) – קוקטיילים בשקיעה על המפרץ",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🌊 קו פנגן  |  5 לילות  (20–24 ספט׳)"
+  },
+  {
+   "day": 29,
+   "date": "2026-09-24",
+   "dow": "חמישי",
+   "dest": "קו פנגן",
+   "hotel": "Kupu Kupu Phangan",
+   "transport": "שהייה בקו פנגן · צ'ק-אאוט מחר (25.9) ב-12:00",
+   "activities": "יום אחרון ורגוע בקו פנגן – חוף, בריכה פרטית בווילה וספא. אופציונלי: טיול יום בסירה לקו מה / שנורקל. שקיעה אחרונה על האי.",
+   "restaurants": "Same Same (תונג סאלה) – פאד תאי וקוקוס טרי | La Cave (האד רין) – בר יין עם נוף לים",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "מעבר לקו טאו מחר (25.9) – מעבורת ~שעה וחצי",
+   "region": "🌊 קו פנגן  |  5 לילות  (20–24 ספט׳)"
+  },
+  {
+   "day": 30,
+   "date": "2026-09-25",
+   "dow": "שישי",
+   "dest": "קו טאו",
+   "hotel": "Haadtien Beach Resort",
+   "transport": "מעבורת מקו פנגן (~שעה וחצי) → קו טאו · צ'ק-אין להאדטיין",
+   "activities": "צלילה ב-Chumphon Pinnacle או בשלד ספינה HTMS Sattakut (אתרי הצלילה הכי טובים בתאילנד!). שנורקל ב-Shark Bay – כרישונים קטנים שחורים ועדינים. שקיעה מנקודת התצפית John Suwan.",
+   "restaurants": "Safety Stop Pub (סייריי) – מפגש קהילת הצוללים | New Heaven Restaurant – תפס-יום טרי",
+   "price_orig": "—",
+   "price_nis": 1718.0,
+   "notes": "להזמין צלילה עם Big Blue Diving",
+   "region": "🐠 קו טאו  |  3 לילות  (25–28 ספט׳)"
+  },
+  {
+   "day": 31,
+   "date": "2026-09-26",
+   "dow": "שבת",
+   "dest": "קו טאו",
+   "hotel": "Haadtien Beach Resort",
+   "transport": "הליכה / סירת לונגטייל",
+   "activities": "טיול לאי קו נאנג יואן (הכי אינסטגרמי בתאילנד). שנורקל ושחייה. שוק הכפר מאה האד. עיסוי זוגי בריזורט.",
+   "restaurants": "Zest Café (מאה האד) – הקפה הטוב ביותר באי | Café Corner – קערות שייקים טרופיות",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🐠 קו טאו  |  3 לילות  (25–28 ספט׳)"
+  },
+  {
+   "day": 32,
+   "date": "2026-09-27",
+   "dow": "ראשון",
+   "dest": "קו טאו",
+   "hotel": "Haadtien Beach Resort",
+   "transport": "סירת לונגטייל",
+   "activities": "שנורקל/צלילה אחרונה – שוניות Twins (אלמוגים צבעוניים מדהימים). אחרית כושל ורגוע על החוף. לארוז ולהנות משקיעה אחרונה על האי.",
+   "restaurants": "Choppers Bar & Grill – ברביקיו על החוף | Karma Bar – קוקטיילים על צוק השקיעה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🐠 קו טאו  |  3 לילות  (25–28 ספט׳)"
+  },
+  {
+   "day": 33,
+   "date": "2026-09-28",
+   "dow": "שני",
+   "dest": "בנגקוק",
+   "hotel": "The Standard, Bangkok Mahanakhon",
+   "transport": "מעבורת + ואן לסוראט תאני + טיסה לבנגקוק",
+   "activities": "יציאה בבוקר. מעבורת ציורית. העברה לבנגקוק.",
+   "restaurants": "פירות טריים ופנקייק קוקוס בנמל הסירות",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": null,
+   "region": "🏛️ בנגקוק  |  2 לילות  (29–30 ספט׳)"
+  },
+  {
+   "day": 34,
+   "date": "2026-09-29",
+   "dow": "שלישי",
+   "dest": "בנגקוק",
+   "hotel": "The Standard, Bangkok Mahanakhon",
+   "transport": "טיסה מקו סמוי / סוראט תאני ~שעה",
+   "activities": "הארמון המלכותי ו-Wat Phra Kaew (בודהה אמרלד). Wat Pho (בודהה שוכב ענק + עיסוי תאי מסורתי). שייט על נהר צ'או פריה בשקיעה. שוק הלילה אסייאטיק.",
+   "restaurants": "Paste (גייסורן) – 1 כוכב מישלן תאי | Sky Bar Lebua (הבר מ-'The Hangover 2') – קוקטיילים בשקיעה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "לשקול Capella Bangkok / Mandarin Oriental ללילה אחרון",
+   "region": "🏛️ בנגקוק  |  2 לילות  (29–30 ספט׳)"
+  },
+  {
+   "day": 35,
+   "date": "2026-09-30",
+   "dow": "רביעי",
+   "dest": "בנגקוק",
+   "hotel": "The Standard, Bangkok Mahanakhon",
+   "transport": "Uber/Grab לשדה התעופה → טיסה הביתה",
+   "activities": "בית ג'ים תומפסון (מורשת משי). קניות אחרונות בסיאם פאראגון. הריצה האחרונה. שדה תעופה סוווארנאבהומי. הביתה – עמוסים בזיכרונות לכל החיים.",
+   "restaurants": "ארוחת בוקר במלון | Gaggan Anand – המסעדה הטובה ביותר באסיה (להזמין 3 חודשים מראש!) | טרקלין בשדה התעופה",
+   "price_orig": "—",
+   "price_nis": "—",
+   "notes": "טיסה מ-BKK (Suvarnabhumi)",
+   "region": "🏛️ בנגקוק  |  2 לילות  (29–30 ספט׳)"
+  }
+ ],
+ "budget": [
+  {
+   "cat": "🏨 מלונות",
+   "item": "טוקיו – GINZA HOTEL by GRANBELL (6 לילות)",
+   "orig": "¥171,072",
+   "nis": 3524.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "האקונה – Gora Kansuiro ריוקן (לילה אחד)",
+   "orig": "—",
+   "nis": 1675.0,
+   "notes": "מאושר – כולל ארוחות"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "מצומוטו – Matsumoto Jujo (לילה אחד)",
+   "orig": "¥60,500",
+   "nis": 1209.0,
+   "notes": "הזמנה: 3350-3129-4462"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קאמיקוצ'י – Wanosato (לילה אחד)",
+   "orig": "¥75,240",
+   "nis": 1494.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קנאזאווה – Hotel Kanazawa Zoushi (2 לילות)",
+   "orig": "¥83,322",
+   "nis": 932.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קיוטו – Ace Hotel Kyoto (4 לילות)",
+   "orig": "¥157,513",
+   "nis": 3245.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קוראשיקי – Nagi Kurashiki Hotel (לילה אחד)",
+   "orig": "—",
+   "nis": 552.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "נאושימה – SANAMANE (2 לילות)",
+   "orig": "¥109,400",
+   "nis": 2200.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "אוסקה – THE LEBEN OSAKA (2 לילות)",
+   "orig": "—",
+   "nis": 1372.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קו סמוי – Six Senses (3 לילות)",
+   "orig": "—",
+   "nis": 4843.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קו פנגן – Kupu Kupu Phangan (5 לילות)",
+   "orig": "THB 63,270",
+   "nis": 6139.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "קו טאו – The Place / Haadtien (4 לילות)",
+   "orig": "—",
+   "nis": 1718.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🏨 מלונות",
+   "item": "בנגקוק – The Standard Mahanakhon (2 לילות)",
+   "orig": "฿11,660",
+   "nis": 1130.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🚆 תחבורה",
+   "item": "רכבות בודדות ביפן (2 אנשים) – הערכה",
+   "orig": "~¥58,000",
+   "nis": 1200.0,
+   "notes": "הערכה · במקום JR Pass · קנאזאווה→קיוטו, קיוטו→קוראשיקי, נאושימה→אוסקה, נארה + נסיעות מקומיות"
+  },
+  {
+   "cat": "🚆 תחבורה",
+   "item": "Romancecar שינג'וקו→האקונה × 2",
+   "orig": "¥2,400",
+   "nis": 140.0,
+   "notes": "לקנות באתר אודאקיו"
+  },
+  {
+   "cat": "🚆 תחבורה",
+   "item": "רכב שכור – אלפים (3 ימים)",
+   "orig": null,
+   "nis": 1500.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "✈️ טיסות",
+   "item": "ישראל → טוקיו (נריטה/האנדה)",
+   "orig": 1800.0,
+   "nis": 5902,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "✈️ טיסות",
+   "item": "יפן → תאילנד (אוסקה → קו סמוי)",
+   "orig": 112160.0,
+   "nis": 2364.84,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "✈️ טיסות",
+   "item": "קו סמוי → בנגקוק (PG146, 2 נוסעים)",
+   "orig": "THB 11,800",
+   "nis": 1145.0,
+   "notes": "מאושר · FB39F5"
+  },
+  {
+   "cat": "✈️ טיסות",
+   "item": "בנגקוק → ישראל (flydubai SFIBBE)",
+   "orig": "—",
+   "nis": 7331.0,
+   "notes": "מאושר"
+  },
+  {
+   "cat": "🍣 אוכל ומסעדות",
+   "item": "Hikiniku to Come קיצ׳יג׳וג׳י (28.8, 2 אנשים)",
+   "orig": "¥5,960",
+   "nis": 123.0,
+   "notes": "מאושר · שולם מראש"
+  },
+  {
+   "cat": "🍣 אוכל ומסעדות",
+   "item": "יפן – הערכה ¥8,000 ליום × 21 ימים × 2 אנשים",
+   "orig": "¥336,000",
+   "nis": 6720.0,
+   "notes": "הערכה"
+  },
+  {
+   "cat": "🍣 אוכל ומסעדות",
+   "item": "תאילנד – הערכה THB 2,500 ליום × 14 ימים × 2 אנשים",
+   "orig": "THB 70,000",
+   "nis": 6800.0,
+   "notes": "הערכה"
+  },
+  {
+   "cat": "🎨 פעילויות",
+   "item": "TeamLab Planets + Borderless (טוקיו)",
+   "orig": "¥9,000",
+   "nis": 270.0,
+   "notes": "להזמין אונליין"
+  },
+  {
+   "cat": "🎨 פעילויות",
+   "item": "מוזיאון צ'יצ'ו – נאושימה (2 מבוגרים)",
+   "orig": "¥5,400",
+   "nis": 111.0,
+   "notes": "מאושר · 13.9 בשעה 10:45"
+  },
+  {
+   "cat": "🎨 פעילויות",
+   "item": "מוזיאון נאושימה החדש + Benesse House (2 אנשים)",
+   "orig": "¥5,600",
+   "nis": 115.0,
+   "notes": "מאושר · 12.9 + 13.9"
+  },
+  {
+   "cat": "🚆 תחבורה",
+   "item": "אופניים חשמליים נאושימה (2 × 2 ימים)",
+   "orig": "¥4,800",
+   "nis": 99.0,
+   "notes": "מאושר · 260912142 + 260913144 · תשלום במקום"
+  },
+  {
+   "cat": "🎨 פעילויות",
+   "item": "צלילה בקו טאו (2 צלילות)",
+   "orig": "THB 3,000",
+   "nis": 290.0,
+   "notes": "bigbluediving.com"
+  },
+  {
+   "cat": "🎨 פעילויות",
+   "item": "טיול סירה Ang Thong – קו סמוי",
+   "orig": "THB 2,500",
+   "nis": 242.0,
+   "notes": "לסדר דרך Six Senses"
+  },
+  {
+   "cat": "💆 ספא ורווחה",
+   "item": "אונסן / ספא (הערכה)",
+   "orig": "—",
+   "nis": 500.0,
+   "notes": "הערכה"
+  },
+  {
+   "cat": "🛍️ קניות",
+   "item": "מזכרות, אופנה, מתנות",
+   "orig": "—",
+   "nis": 3000.0,
+   "notes": "הערכה אישית"
+  },
+  {
+   "cat": "📋 שונות",
+   "item": "ביטוח נסיעות (הראל) – 2 אנשים",
+   "orig": "—",
+   "nis": 610.0,
+   "notes": "מאושר · נרכש 14.8 · בן + רונית"
+  },
+  {
+   "cat": "📋 שונות",
+   "item": "eSIM / WiFi ניד ביפן",
+   "orig": "—",
+   "nis": 200.0,
+   "notes": "Sakura Mobile / IIJmio"
+  },
+  {
+   "cat": "📋 שונות",
+   "item": "eSIM תאילנד",
+   "orig": "—",
+   "nis": 80.0,
+   "notes": "AIS או DTAC"
+  }
+ ],
+ "budget_total": {
+  "label": "סה\"כ מוערך (כל הפריטים + הערכות)",
+  "nis": 68775.84
+ },
+ "checklist": [
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "GINZA HOTEL by GRANBELL – טוקיו",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Gora Kansuiro ריוקן – האקונה",
+   "deadline": "בוצע",
+   "notes": "מאושר – כולל ארוחות"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Matsumoto Jujo – מצומוטו",
+   "deadline": "בוצע",
+   "notes": "הזמנה: 3350-3129-4462"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Wanosato – קאמיקוצ'י",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Hotel Kanazawa Zoushi – קנאזאווה",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Ace Hotel Kyoto – קיוטו",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Nagi Kurashiki Hotel & Suites – קוראשיקי",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Benesse House – נאושימה (אי האמנות)",
+   "deadline": "בוצע",
+   "notes": "הוחלף ב-SANAMANE, נאושימה – אישור 349"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "HOTEL THE LEBEN OSAKA – אוסקה",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Six Senses Samui – קו סמוי",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Kupu Kupu Phangan – קו פנגן",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "Haadtien Beach Resort / The Place – קו טאו",
+   "deadline": "בוצע",
+   "notes": "מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מלונות",
+   "task": "The Standard, Bangkok Mahanakhon",
+   "deadline": "בוצע",
+   "notes": "מאושר · אישור #32889782 · 28–30.9"
+  },
+  {
+   "status": "⚠️ לאשר",
+   "cat": "תחבורה",
+   "task": "אופניים 12.9 — לאשר שינוי שעה מ-09:00 ל-13:00",
+   "deadline": "בדחיפות!",
+   "notes": "הזמנה 260912142 · נשלחה בקשה במייל ל-OUGIYA · בלי אישור: אי-הגעה = חיוב 100%"
+  },
+  {
+   "status": "⚠️ להזמין",
+   "cat": "תחבורה",
+   "task": "מעבורת קו טאו → קו סמוי (28.9, 08:30)",
+   "deadline": "בקו טאו · 26–27.9",
+   "notes": "אפשר להזמין על האי יום-יומיים לפני · חובה ה-08:30 (זו של 14:45 מפספסת את הטיסה) · אם הים גרוע — Seatran/Songserm כחלופה"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "טיסות",
+   "task": "ת\"א → טוקיו (נריטה / האנדה)",
+   "deadline": "בוצע",
+   "notes": "אל על LY91 · קוד ZJV5D3 · מאושר"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "טיסות",
+   "task": "אוסקה → תאילנד (קו סמוי / בנגקוק)",
+   "deadline": "בוצע",
+   "notes": "Scoot/Singapore · קוד DYV95N"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "טיסות",
+   "task": "קו טאו/סמוי → בנגקוק (28.9)",
+   "deadline": "בוצע",
+   "notes": "Bangkok Airways PG146 · אישור FB39F5 · 15:25→16:40"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "טיסות",
+   "task": "בנגקוק → ת\"א",
+   "deadline": "בוצע",
+   "notes": "flydubai · קוד SFIBBE · מאושר"
+  },
+  {
+   "status": "⚠️ להזמין",
+   "cat": "תחבורה",
+   "task": "כרטיסי Romancecar (שינג'וקו → האקונה)",
+   "deadline": "בדחיפות!",
+   "notes": "נדרש להגיע ל-Odawara ב-2.9 עד 10:30 לאיסוף הרכב · אתר אודאקיו"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "תחבורה",
+   "task": "רכב שכור – אלפים (מצומוטו, 3 ימים)",
+   "deadline": "בוצע",
+   "notes": "Toyota Rent a Car · הזמנה 99985289900"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "פעילויות",
+   "task": "TeamLab Planets (טוקיו)",
+   "deadline": "בוצע",
+   "notes": "שולם 2.8 · 29.8 14:00–14:30 · ¥9,600"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מסמכים",
+   "task": "ביטוח נסיעות מקיף",
+   "deadline": "בוצע",
+   "notes": "הראל · ₪610 לשניים · נרכש 14.8 · הפוליסה באפליקציית הראל חו״ל"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מסמכים",
+   "task": "Visit Japan Web – בן (QR הגירה+מכס)",
+   "deadline": "בוצע",
+   "notes": "הושלם 15.8 · לצלם מסך של ה-QR לפני הטיסה"
+  },
+  {
+   "status": "⚠️ לסדר",
+   "cat": "מסמכים",
+   "task": "Visit Japan Web – רונית (QR נפרד)",
+   "deadline": "מומלץ, לא חובה",
+   "notes": "לא חובה — בלי זה ממלאים טופס נייר במטוס. אבל אי אפשר לחלוק QR, ובלעדיו תעברו בשני מסלולים שונים בביקורת הגבולות"
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מסמכים",
+   "task": "ויזה – יפן (דרכון ישראלי: פטור מויזה 90 יום)",
+   "deadline": "בוצע",
+   "notes": null
+  },
+  {
+   "status": "✅ בוצע",
+   "cat": "מסמכים",
+   "task": "ויזה – תאילנד (דרכון ישראלי: פטור מויזה 30 יום)",
+   "deadline": "בוצע",
+   "notes": null
+  },
+  {
+   "status": "⚠️ לסדר",
+   "cat": "טכנולוגיה",
+   "task": "eSIM יפן – Sakura Mobile / IIJmio",
+   "deadline": "שבוע לפני",
+   "notes": "sakuramobile.jp"
+  },
+  {
+   "status": "⚠️ לסדר",
+   "cat": "טכנולוגיה",
+   "task": "eSIM תאילנד – AIS / DTAC",
+   "deadline": "שבוע לפני",
+   "notes": "להפעיל עם ההגעה"
+  },
+  {
+   "status": "⚠️ לסדר",
+   "cat": "כסף",
+   "task": "מזומן יפני – ¥100,000+ לאדם",
+   "deadline": "לפני היציאה",
+   "notes": "יפן עדיין מבוססת מזומן!"
+  },
+  {
+   "status": "⚠️ לסדר",
+   "cat": "כסף",
+   "task": "באט תאילנדי – THB 10,000 לאדם",
+   "deadline": "לפני / בהגעה",
+   "notes": "או ATM עם ההגעה"
+  },
+  {
+   "status": "⚠️ לארוז",
+   "cat": "ציוד",
+   "task": "דוחה יתושים DEET (לתאילנד)",
+   "deadline": "לארוז",
+   "notes": "הכרחי באיים התאיים"
+  },
+  {
+   "status": "⚠️ לארוז",
+   "cat": "ציוד",
+   "task": "קרם הגנה ידידותי לאלמוגים (קו טאו / פנגן)",
+   "deadline": "לארוז",
+   "notes": "להגן על השוניות!"
+  },
+  {
+   "status": "⚠️ לארוז",
+   "cat": "ציוד",
+   "task": "כיסוי צנוע לפגישות במקדשים (יפן ובנגקוק)",
+   "deadline": "לארוז",
+   "notes": "כתפיים וברכיים מכוסות"
+  },
+  {
+   "status": "⚠️ לארוז",
+   "cat": "ציוד",
+   "task": "נעליים נוחות להחלקה (מקדשים – להוריד נעליים)",
+   "deadline": "לארוז",
+   "notes": "נוחות מאוד ביפן"
+  }
+ ]
+};
+const HOTELS=[
+  {match:'GINZA',name:'GINZA HOTEL by GRANBELL',city:'Ginza, Tokyo',platform:'Booking.com',conf:'5102028994',pin:'6634',
+   inD:'2026-08-27',inT:'15:00',outD:'2026-09-02',outT:'11:00',bf:false,bfText:'ללא ארוחת בוקר (חדר בלבד)',
+   note:'הזמנה מחודשת (31.7) · Queen Room · ¥171,072 · ביטול חינם עד 24.8'},
+  {match:'Gora Kansuiro',name:'Gora Kansuiro (ריוקן)',city:'Hakone',platform:'Booking.com',conf:'5981863965',pin:null,
+   inD:'2026-09-02',inT:null,outD:'2026-09-03',outT:null,bf:true,bfText:'ארוחת בוקר + ערב (קאיסקי) כלולות',
+   note:'התקבל מהמלון מייל על תקלה/עדכון — שווה לוודא מולם שהכל תקין'},
+  {match:'Matsumoto Jujo',name:'Matsumoto Jujo',city:'Matsumoto',platform:'הזמנה ישירה',conf:'3350-3129-4462',pin:null,
+   inD:'2026-09-03',inT:'17:00',inWin:'17:00–22:00',outD:'2026-09-04',outT:'11:00',bf:true,bfText:'ארוחת בוקר הוזמנה (¥6,600 לשניים)',
+   phone:'info@matsumotojujo.com',
+   note:'חדר [Matsumoto Honbako] twin עם אמבט פתוח · תשלום במלון ¥60,500 · 🌡️ הוזמן: סיור מקורות חמים נסתרים באסאמה אונסן — חינם, מ-16:00 ב-3.9, כלומר להגיע לפני הצ׳ק-אין! · חניה: 3-15-17 Asama Onsen · צ׳ק-אאוט 11:00'},
+  {match:'Wanosato',name:'Wanosato',city:'Kamikochi / Takayama',platform:'Booking.com',conf:'6286847477',pin:'2615',
+   inD:'2026-09-04',inT:null,outD:'2026-09-05',outT:null,bf:true,bfText:'ארוחת בוקר + ערב (קאיסקי) כלולות',
+   phone:'info@wanosato.com',
+   note:'המלון שאל על מין/גילאים/אלרגיות ושאטל — נשלחה תשובה · מגיעים ברכב מקאמיקוצ׳י (לא בשאטל מטקאיאמה) · ⚠️ ממתין לתשובה: חנייה לרכב + שעת ארוחת הערב, כדי לדעת מתי לעזוב את קאמיקוצ׳י'},
+  {match:'Kanazawa Zoushi',name:'Hotel Kanazawa Zoushi',city:'Kanazawa',platform:'Booking.com',conf:'5607184935',pin:'3130',
+   inD:'2026-09-05',inT:null,outD:'2026-09-07',outT:null,bf:false,bfText:'ללא — ניתן להוסיף ¥1,500 לאדם',
+   note:'PIN עודכן ל-3130 (היה 8410)'},
+  {match:'Ace Hotel',name:'Ace Hotel Kyoto',city:'Kyoto',platform:'Booking.com',conf:'6501190822',pin:'4746',
+   inD:'2026-09-07',inT:'15:00',outD:'2026-09-11',outT:'12:00',bf:false,bfText:'ללא — ניתן להוסיף ¥4,800 לאדם',
+   note:'הזמנה מחודשת (31.7) · Standard King · ¥157,513 · ביטול חינם עד 4.9'},
+  {match:'Nagi Kurashiki',name:'Nagi Kurashiki Hotel & Lounge',city:'Kurashiki',platform:'Booking.com',conf:'6993399611',pin:'6399',
+   inD:'2026-09-11',inT:null,outD:'2026-09-12',outT:null,bf:false,bfText:'ללא ארוחת בוקר'},
+  {match:'SANAMANE',name:'SANAMANE',city:'Naoshima',platform:'JTB (ע״ש רונית)',conf:'349',pin:null,phone:'087-813-3177',
+   inD:'2026-09-12',inT:null,outD:'2026-09-14',outT:null,bf:false,bfText:'ללא ארוחות',
+   note:'Login ID 0JFH5DB7 · חדר Forest side · שולם מראש ¥109,400 · ההזמנה ע״ש רונית · ⚠️ שעת הצ׳ק-אין לא צוינה באישור, וללא ארוחות כלל — נשלח מייל ל-info@sanamane.jp לברר ארוחות, שעות והעברה מהנמל עם המזוודות'},
+  {match:'LEBEN',name:'HOTEL THE LEBEN OSAKA',city:'Osaka',platform:'Booking.com',conf:'5788785023',pin:'7879',
+   inD:'2026-09-14',inT:null,outD:'2026-09-16',outT:null,bf:false,bfText:'ללא ארוחת בוקר',
+   note:'PIN עודכן ל-7879 (היה 9971) · טיסה לתאילנד בלילה של ה-16.9'},
+  {match:'Six Senses',name:'Six Senses Samui',city:'Choeng Mon, Koh Samui',platform:'Booking.com',conf:'6175859786',pin:'4295',
+   inD:'2026-09-17',inT:null,outD:'2026-09-20',outT:null,bf:true,bfText:'כולל ארוחת בוקר'},
+  {match:'Kupu Kupu',name:'Kupu Kupu Phangan Beach Villas & Spa',city:'Nai Wok Beach, Koh Phangan',
+   platform:'הזמנה ישירה (Lilawadee)',conf:'28157',pin:null,phone:'+66 77 377 384',
+   inD:'2026-09-20',inT:'14:00',outD:'2026-09-25',outT:'12:00',bf:true,bfText:'ארוחת בוקר יומית לזוג כלולה',
+   note:'Deluxe Beach Front Pool Villa · שולם במלואו · WhatsApp +66 64 614 1400'},
+  {match:'Haadtien',name:'Haadtien Beach Resort',city:'Koh Tao',platform:'Booking.com',conf:'5999527797',pin:'2288',
+   inD:'2026-09-25',inT:null,outD:'2026-09-28',outT:null,bf:true,bfText:'כולל ארוחת בוקר',
+   note:'ב-28.9 בבוקר — מעבורת 08:30 ממאה האד לסמוי לטיסה לבנגקוק'},
+  {match:'Standard',name:'The Standard, Bangkok Mahanakhon',city:'Silom, Bangkok',platform:'World of Hyatt',conf:'32889782',pin:null,
+   inD:'2026-09-28',inT:'15:00',outD:'2026-09-30',outT:'12:00',bf:false,bfText:'חדר בלבד (לא צוינה ארוחת בוקר)',
+   note:'Standard King · ฿5,830 ללילה · 114 Narathiwas Rd · הטיסה הביתה מ-DMK בלילה של ה-30.9'}
+];
+const FLIGHTS=[
+  {days:[1],airline:'El Al · אל על',code:'ZJV5D3',flightNo:'LY91',cls:'Economy Classic (G)',
+   from:'TLV',fromTime:'26.8 · 19:15',fromT:'טרמינל 3',to:'NRT',toTime:'27.8 · 13:20',toT:'נריטה · טרמינל 1',
+   note:'כרטיסים: בן 1142492923268 · רונית 1142492923267'},
+  {days:[21],airline:'Scoot / Singapore Airlines',code:'DYV95N',flightNo:'Scoot A98MMM',cls:'דרך סינגפור',
+   from:'KIX',fromTime:'16.9 · 23:25',fromT:'אוסקה · טרמינל 1',to:'USM',toTime:'17.9 · 10:10',toT:'קו סמוי',
+   note:'עצירה בסינגפור: נחיתה 04:45 → המראה 09:20 (טרמינל 1). לבחירת מושב/ארוחה: flyscoot.com עם A98MMM'},
+  {days:[35],airline:'flydubai',code:'SFIBBE',flightNo:'FZ1336 / FZ1541',cls:'דרך דובאי',
+   from:'DMK',fromTime:'30.9 · 23:50',fromT:'בנגקוק · דון מואנג',to:'TLV',toTime:'1.10 · 07:40',toT:'תל אביב',
+   note:'עצירה בדובאי (DXB טרמינל 3): נחיתה 03:25 → המראה 05:10 · טרנזיט ~1ש׳45ד'},
+  {days:[33],airline:'Bangkok Airways',code:'FB39F5',flightNo:'PG 146 · A319',cls:'Economy · ישירה',
+   from:'USM',fromTime:'28.9 · 15:25',fromT:'קו סמוי',to:'BKK',toTime:'28.9 · 16:40',toT:'סוברנבומי',
+   note:'מושבים: בן 12A · רונית 12B(?) · כבודה 20 ק״ג לאדם + 7 ק״ג יד · דלפק הצ׳ק-אין נסגר 40 דק׳ לפני · ⚠️ הטיסה הביתה ב-30.9 יוצאת מ-DMK, שדה אחר!'}
+];
+const CAR={name:'Toyota Rent a Car',res:'99985289900',car:'Corolla Touring · אוטומט',
+  pickup:'תחנת Odawara (יציאת שינקנסן) · 2.9 · 10:30',pickupPhone:'0465-32-0100',
+  ret:'תחנת Kanazawa (יציאה מזרחית) · 5.9 · 20:00',price:'¥81,950'};
+const POIS=[
+  {c:'טוקיו',t:'s',n:'Senso-ji Temple',ll:[35.7148,139.7967]},
+  {c:'טוקיו',t:'s',n:'Meiji Jingu Shrine',ll:[35.6764,139.6993]},
+  {c:'טוקיו',t:'s',n:'Shibuya Crossing',ll:[35.6595,139.7005]},
+  {c:'טוקיו',t:'s',n:'Shibuya Sky',ll:[35.6580,139.7016]},
+  {c:'טוקיו',t:'s',n:'teamLab Planets',ll:[35.6486,139.7905]},
+  {c:'טוקיו',t:'s',n:'teamLab Borderless (Azabudai)',ll:[35.6605,139.7290]},
+  {c:'טוקיו',t:'s',n:'Shinjuku Gyoen',ll:[35.6852,139.7100]},
+  {c:'טוקיו',t:'s',n:'Harajuku Takeshita St',ll:[35.6716,139.7026]},
+  {c:'טוקיו',t:'s',n:'Akihabara',ll:[35.6984,139.7731]},
+  {c:'טוקיו',t:'s',n:'Odaiba',ll:[35.6297,139.7763]},
+  {c:'טוקיו',t:'f',n:'Ichiran Ramen Shibuya',ll:[35.6617,139.7006]},
+  {c:'טוקיו',t:'f',n:'Narisawa',ll:[35.6680,139.7197]},
+  {c:'טוקיו',t:'f',n:'Bar High Five (Ginza)',ll:[35.6719,139.7625]},
+  {c:'האקונה',t:'s',n:'Hakone Open-Air Museum',ll:[35.2447,139.0508]},
+  {c:'האקונה',t:'s',n:'Lake Ashi',ll:[35.2031,139.0246]},
+  {c:'האקונה',t:'s',n:'Owakudani',ll:[35.2440,139.0197]},
+  {c:'מצומוטו',t:'s',n:'Matsumoto Castle',ll:[36.2384,137.9690]},
+  {c:'מצומוטו',t:'s',n:'Nawate Street',ll:[36.2360,137.9710]},
+  {c:'מצומוטו',t:'f',n:'Kura (Matsumoto)',ll:[36.2299,137.9686]},
+  {c:"קאמיקוצ'י",t:'s',n:'Kappa Bridge',ll:[36.2516,137.6380]},
+  {c:"קאמיקוצ'י",t:'s',n:'Taisho Pond',ll:[36.2447,137.6303]},
+  {c:"קאמיקוצ'י",t:'s',n:'Myojin Pond',ll:[36.2603,137.6585]},
+  {c:'קנאזאווה',t:'s',n:'Kenroku-en Garden',ll:[36.5620,136.6626]},
+  {c:'קנאזאווה',t:'s',n:'Higashi Chaya District',ll:[36.5722,136.6663]},
+  {c:'קנאזאווה',t:'s',n:'21st Century Museum',ll:[36.5608,136.6580]},
+  {c:'קנאזאווה',t:'s',n:'Kanazawa Castle',ll:[36.5654,136.6590]},
+  {c:'קנאזאווה',t:'s',n:'Omicho Market',ll:[36.5717,136.6577]},
+  {c:'קנאזאווה',t:'s',n:'Shirakawa-go',ll:[36.2578,136.9066]},
+  {c:'קיוטו',t:'s',n:'Fushimi Inari Taisha',ll:[34.9671,135.7727]},
+  {c:'קיוטו',t:'s',n:'Kinkaku-ji (Golden Pavilion)',ll:[35.0394,135.7292]},
+  {c:'קיוטו',t:'s',n:'Nishiki Market',ll:[35.0050,135.7649]},
+  {c:'קיוטו',t:'s',n:'Nijo Castle',ll:[35.0142,135.7481]},
+  {c:'קיוטו',t:'s',n:'Gion',ll:[35.0036,135.7755]},
+  {c:'קיוטו',t:'s',n:'Pontocho Alley',ll:[35.0048,135.7707]},
+  {c:'קיוטו',t:'s',n:'Arashiyama Bamboo Grove',ll:[35.0170,135.6716]},
+  {c:'קיוטו',t:'s',n:'Tenryu-ji',ll:[35.0156,135.6738]},
+  {c:'קיוטו',t:'s',n:'Arashiyama Monkey Park',ll:[35.0095,135.6770]},
+  {c:'קיוטו',t:'s',n:'Yasaka Shrine',ll:[35.0036,135.7785]},
+  {c:'קיוטו',t:'s',n:'Todai-ji (Nara)',ll:[34.6890,135.8398]},
+  {c:'קיוטו',t:'s',n:'Nara Park',ll:[34.6851,135.8430]},
+  {c:'קוראשיקי',t:'s',n:'Bikan Historical Quarter',ll:[34.5970,133.7715]},
+  {c:'קוראשיקי',t:'s',n:'Ivy Square',ll:[34.5958,133.7726]},
+  {c:'קוראשיקי',t:'f',n:'Cafe El Greco',ll:[34.5972,133.7720]},
+  {c:'נאושימה',t:'s',n:'Chichu Art Museum',ll:[34.4538,133.9899]},
+  {c:'נאושימה',t:'s',n:'Benesse House Museum',ll:[34.4596,133.9930]},
+  {c:'נאושימה',t:'s',n:'Yayoi Kusama Yellow Pumpkin',ll:[34.4612,133.9986]},
+  {c:'נאושימה',t:'s',n:'Art House Project',ll:[34.4628,134.0140]},
+  {c:'נאושימה',t:'s',n:'Teshima Art Museum',ll:[34.4990,134.0930]},
+  {c:'אוסקה',t:'s',n:'Dotonbori',ll:[34.6687,135.5013]},
+  {c:'אוסקה',t:'s',n:'Kuromon Market',ll:[34.6651,135.5061]},
+  {c:'אוסקה',t:'s',n:'Osaka Castle',ll:[34.6873,135.5259]},
+  {c:'אוסקה',t:'s',n:'Shinsekai & Tsutenkaku',ll:[34.6525,135.5063]},
+  {c:'אוסקה',t:'s',n:'Hozenji Temple',ll:[34.6682,135.5025]},
+  {c:'אוסקה',t:'s',n:'Namba',ll:[34.6659,135.5020]},
+  {c:'קו סמוי',t:'s',n:'Big Buddha (Wat Phra Yai)',ll:[9.5640,100.0640]},
+  {c:'קו סמוי',t:'s',n:'Ang Thong Marine Park',ll:[9.6167,99.6667]},
+  {c:'קו סמוי',t:'s',n:'Chaweng Beach',ll:[9.5340,100.0620]},
+  {c:'קו סמוי',t:'s',n:"Fisherman's Village Bophut",ll:[9.5710,100.0080]},
+  {c:'קו סמוי',t:'f',n:'Barracuda (Bophut)',ll:[9.5705,100.0072]},
+  {c:'קו פנגן',t:'s',n:'Than Sadet Waterfall',ll:[9.7720,100.0560]},
+  {c:'קו פנגן',t:'s',n:'Haad Rin Beach',ll:[9.6790,100.0680]},
+  {c:'קו פנגן',t:'s',n:'Thong Nai Pan Beach',ll:[9.7860,100.0640]},
+  {c:'קו פנגן',t:'s',n:'Bottle Beach',ll:[9.7920,100.0360]},
+  {c:'קו פנגן',t:'s',n:'Srithanu (yoga village)',ll:[9.7560,99.9740]},
+  {c:'קו טאו',t:'s',n:'Koh Nang Yuan',ll:[10.1180,99.8170]},
+  {c:'קו טאו',t:'s',n:'Sairee Beach',ll:[10.0980,99.8290]},
+  {c:'קו טאו',t:'s',n:'Chumphon Pinnacle (dive)',ll:[10.1700,99.7700]},
+  {c:'קו טאו',t:'s',n:'John-Suwan Viewpoint',ll:[10.0580,99.8430]},
+  {c:'קו טאו',t:'s',n:'Shark Bay',ll:[10.0640,99.8470]},
+  {c:'בנגקוק',t:'s',n:'Grand Palace',ll:[13.7500,100.4915]},
+  {c:'בנגקוק',t:'s',n:'Wat Pho',ll:[13.7466,100.4929]},
+  {c:'בנגקוק',t:'s',n:'Wat Arun',ll:[13.7437,100.4889]},
+  {c:'בנגקוק',t:'s',n:'Jim Thompson House',ll:[13.7492,100.5283]},
+  {c:'בנגקוק',t:'s',n:'Siam Paragon',ll:[13.7460,100.5350]},
+  {c:'בנגקוק',t:'s',n:'Sky Bar (Lebua)',ll:[13.7220,100.5165]},
+  {c:'בנגקוק',t:'f',n:'Gaggan Anand',ll:[13.7236,100.5805]}
+];
+
+const $=(s,e=document)=>e.querySelector(s);
+const $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const nis=v=>(v||v===0)?'₪'+Number(v).toLocaleString('he-IL',{maximumFractionDigits:0}):'—';
+const MH=['ינו','פבר','מרץ','אפר','מאי','יוני','יולי','אוג','ספט','אוק','נוב','דצמ'];
+const DW=['א','ב','ג','ד','ה','ו','ש'];
+const dt=s=>new Date(s+'T00:00:00');
+const fmtD=s=>{const d=dt(s);return d.getDate()+' '+MH[d.getMonth()];};
+const isJP=d=>dt(d.date)<dt('2026-09-17');
+const regionShort=r=>r.split('|')[0].trim();
+const regionNights=r=>{const m=r.split('|')[1];return m?m.trim():'';};
+const regions=[...new Set(DATA.days.map(d=>d.region))];
+const regionColor=r=>DATA.days.find(d=>d.region===r)&&isJP(DATA.days.find(d=>d.region===r))?'var(--jp)':'var(--th)';
+const rc=r=>{const d=DATA.days.find(x=>x.region===r);return d&&isJP(d)?'#6b5bd2':'#0a9ba8';};
+const EXTRAS=[
+  {day:1,type:'doc',name:'Visit Japan Web — קוד QR לכניסה',time:'27.8 · בביקורת הגבולות בנריטה',
+   okText:'בן רשום',
+   link:'https://www.vjw.digital.go.jp/main/#/vjwpic026',
+   linkText:'🛂 פתח את ה-QR שלי',
+   note:'קוד אחד משולב להגירה + מכס · ⚠️ לצלם מסך לפני הטיסה! בנריטה אין תמיד קליטה, והצילום עובד גם אופליין · לרונית כדאי QR משלה (אי אפשר לחלוק) — לא חובה, בלי זה ממלאים טופס נייר במטוס · הכתובת שנרשמה: GINZA HOTEL by GRANBELL, 104-0061'},
+  {day:2,type:'food',name:'Hikiniku to Come — קיצ׳יג׳וג׳י',time:'28.8 · 19:30 (הגעה)',
+   price:'¥5,960 · שולם מראש (כרטיס 9420)',guests:'2 · סט מלא כלול',
+   addr:'2-8-3 Kichijoji Honcho 1F, Musashino, Tokyo 180-0004',
+   link:'https://tblc.hk/rGCSRHH',
+   note:'⚠️ 19:30 = שעת הגעה, לא ישיבה — צפויה המתנה בחוץ · איחור מעל 10 דק׳ מבטל · חובה להציג מספר הזמנה (נמצא בקישור "ניהול ההזמנה") · ללא מזומן · לצאת מגינזה ב-18:30'},
+  {day:17,type:'activity',name:'נאושימה · יום 1 — כפר הונמורה',time:'12.9 · 13:00–18:00',
+   addr:'Honmura, Naoshima',
+   link:'https://benesse-artsite.eventos.tokyo/web/portal/797/event/8483/users/mypage/my-ticket',
+   linkText:'🎟️ הכרטיסים שלי (Benesse)',
+   note:'🚲 אופניים מאושר — הזמנה 260912142 · ⚠️ נרשם 09:00 אבל אתם מגיעים ~12:30 — נשלחה בקשת שינוי ל-13:00, לוודא שאושר! · תשלום במקום · טל׳ 090-3189-0471 · החזרה עד 18:00 · 13:00–14:00 Naoshima New Museum of Art — מאושר ומשולם (¥3,000) · ⚠️ הכרטיס תקף 10:00–16:30 בלבד, אל תשאירו לסוף היום! · בכניסה צריך QR נפרד לכל כרטיס (לא MY QR CODE) · דלעת אדומה בנמל, חינם · אחר כך רכיבה להונמורה לשיטוט חופשי בכפר · The Naoshima Plan "The Water" חינם · Art House ומוזיאון אנדו לא הוזמנו — אפשר לקנות במקום ביום עצמו (¥1,400/¥700, בלי שעה) · בערב מרחצאות I♥湯 ¥660 בלי הזמנה'},
+  {day:18,type:'activity',name:'נאושימה · יום 2 — צ׳יצ׳ו ואשכול בנסה',conf:'צ׳יצ׳ו 13.9 10:45',
+   time:'13.9 · 09:00–18:00',price:'צ׳יצ׳ו ¥5,400 (2 מבוגרים) · שולם',
+   addr:'Chichu Art Museum, Naoshima',
+   link:'https://benesse-artsite.eventos.tokyo/web/portal/797/event/8483/users/mypage/my-ticket',
+   linkText:'🎟️ הכרטיסים שלי (Benesse)',
+   note:'🚲 אופניים מאושר — הזמנה 260913144, 09:00, תשלום במקום · כל היום באשכול הדרומי: רכיבה ~30 דק׳ דרומה → צ׳יצ׳ו — חלון כניסה בפועל 10:40–11:15 → צהריים → Benesse House Museum + Valley Gallery — מאושר ומשולם (¥2,600) · הכרטיס תקף מ-13.9 08:00 עד 14.9 20:00, כלומר אפשר גם ביום היציאה לפני המעבורת → הדלעת הצהובה על החוף, חינם → אופניים 18:00 · Lee Ufan וסוגימוטו לא הוזמנו (סוגימוטו דורש חלון זמן — לא ניתן לקנות במקום בלי מקום פנוי) · באזור בנסה יש שאטל חינם, העליות תלולות · יום רגוע, יש זמן לחוף ולים'},
+  {day:3,type:'activity',name:'teamLab Planets TOKYO',time:'29.8 · 14:00–14:30 (JST)',
+   price:'¥9,600 · 2 מבוגרים · שולם בכרטיס',
+   addr:'Toyosu, Koto, Tokyo',
+   link:'https://teamlabplanets.dmm.com/en/mytickets/bae926a6e400688ad8',
+   note:'כרטיסי QR — נפתחים רק מחצות ביום הכניסה. להגיע בתוך חלון 14:00–14:30. אפשר לשנות מועד עד 3 פעמים, לא פחות מ-2 שעות לפני. יש שאטל בתשלום מ-GINZA SIX (האוטובוסים הציבוריים עמוסים)'},
+  {day:3,type:'food',name:'PST — Pizza Studio Tamaki, Roppongi',time:'29.8 · בערב',
+   addr:'Roppongi, Tokyo',tzwarn:true,
+   note:'ההזמנה ביומן של רונית · לא נמצא מייל אישור, ולכן השעה לא מאומתת — כדאי לאמת ולעדכן'},
+  {day:5,type:'food',name:'Yakiniku Jambo Hongo',conf:'K3SLT4',time:'31.8 · 21:00',
+   price:'פיקדון ¥20,000',guests:'2 אורחים · צוין: יום הולדת (זוג)',
+   addr:'3-38-1 Hongo, Hongoshintoku Bldg. 1F, Bunkyo, Tokyo 113-0033',phone:'03-5689-8929',
+   note:'שולחן מוגבל ל-2 שעות · ביטול פחות מ-24ש׳ = 100% · איחור מעל 20 דק׳ — חייבים להתקשר'}
+];
+const extrasForDay=d=>EXTRAS.filter(e=>e.day===d);
+function extraCard(e){
+  const ic=e.type==='food'?'🍽️':(e.type==='doc'?'🛂':'🎟️');
+  const badge=e.tzwarn?'<span class="bdg warn">'+(e.warnText||'שעה לא מאומתת')+'</span>':'<span class="bdg ok">✓ '+(e.okText||'מאושר')+'</span>';
+  let g='';
+  if(e.time)g+='<div><div class="k">מועד</div><div class="v">'+e.time+'</div></div>';
+  if(e.guests)g+='<div><div class="k">אורחים</div><div class="v sm">'+e.guests+'</div></div>';
+  if(e.price)g+='<div><div class="k">תשלום</div><div class="v sm">'+e.price+'</div></div>';
+  if(e.phone)g+='<div><div class="k">טלפון</div><div class="v sm">'+e.phone+'</div></div>';
+  return '<div class="card" style="margin-bottom:10px;padding:14px 15px;'+(e.tzwarn?'border-color:#f0ddba;background:var(--warnbg)':'')+'">'+
+    '<div class="dtop"><span class="dest">'+ic+' '+e.name+'</span>'+badge+'</div>'+
+    (e.conf?'<div class="confbox" style="margin-top:10px"><div class="confrow">🎫 מספר אישור <b>'+e.conf+'</b>'+copyBtn(e.conf)+'</div></div>':'')+
+    '<div class="dgrid" style="'+(e.conf?'':'border:0;')+'">'+g+'</div>'+
+    (e.addr?'<div class="blk"><div class="bt">כתובת</div><div class="bc">'+e.addr+'</div></div>':'')+
+    '<div class="acts"><a class="chip" target="_blank" rel="noopener" href="'+mapsLink(e.name+' '+(e.addr||''))+'">📍 ניווט</a>'+
+      (e.phone?'<a class="chip" href="tel:+81'+e.phone.replace(/[^\d]/g,'').replace(/^0/,'')+'">📞 חיוג</a>':'')+
+      (e.link?'<a class="chip" target="_blank" rel="noopener" href="'+e.link+'">'+(e.linkText||'🎟️ הכרטיסים שלי (QR)')+'</a>':'')+'</div>'+
+    (e.note?'<div class="note">'+(e.tzwarn?'⚠️ ':'📌 ')+e.note+'</div>':'')+'</div>';
+}
+const DWF=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function fdate(s){const d=dt(s);return 'יום '+DW[d.getDay()]+'׳ · '+d.getDate()+' '+MH[d.getMonth()];}
+function nights(a,b){return Math.round((dt(b)-dt(a))/864e5);}
+function inoutBox(hc){
+  return '<div class="inout">'+
+    '<div><div class="lab">צ׳ק-אין</div><div class="big">'+fdate(hc.inD)+'</div>'+
+      '<div class="tm">'+(hc.inWin?'בין '+hc.inWin:(hc.inT?'מ-'+hc.inT:'לפי המלון'))+'</div></div>'+
+    '<div><div class="lab">צ׳ק-אאוט</div><div class="big">'+fdate(hc.outD)+'</div>'+
+      '<div class="tm">'+(hc.outT?'עד '+hc.outT:'לפי המלון')+'</div></div>'+
+    '<div style="flex:0 0 74px;text-align:center"><div class="lab">לילות</div>'+
+      '<div class="big">'+nights(hc.inD,hc.outD)+'</div></div></div>';
+}
+const INSURANCE={
+  name:'ביטוח נסיעות לחו״ל — הראל',
+  bought:'נרכש 14.8.2026 · בן + רונית · ₪610',
+  app:'הפוליסה בתוך אפליקציית "הראל חו״ל"',
+  doctor:'Air Doctor — איתור רופא בחו״ל וטיפול ללא תשלום מצידכם',
+  baggage:'פיצוי $155 על איחור מזוודה (ב-Bit/אשראי) — מותנה ברכישת הרחבת כבודה',
+  edit:'שינוי תאריכים / הוספת כיסויים / ביטול — דרך האפליקציה',
+  verify:['לוודא שהתאריכים מכסים 26.8 עד 1.10 (כולל יום הנחיתה)',
+          'צלילה/שנורקל בקו טאו ואופנועים בתאילנד — בדרך כלל דורשים הרחבה',
+          'לוודא אם נרכשה הרחבת כבודה (אחרת אין פיצוי על מזוודה)']
+};
+function findHotelConf(h){if(!h||h==='—')return null;return HOTELS.find(x=>h.includes(x.match))||null;}
+const flightForDay=day=>FLIGHTS.find(f=>f.days.includes(day))||null;
+const mapsLink=q=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+function copyBtn(val,label){return '<button class="cbtn" onclick="cp(this,\''+val+'\')">'+(label||'העתק')+'</button>';}
+window.cp=function(el,v){if(navigator.clipboard)navigator.clipboard.writeText(v);
+  const o=el.textContent;el.textContent='✓ הועתק';el.classList.add('done');
+  setTimeout(()=>{el.textContent=o;el.classList.remove('done');},1400);};
+
+/* tabs */
+$$('.tab[data-v]').forEach(t=>t.onclick=()=>{
+  $$('.tab[data-v]').forEach(x=>x.classList.remove('active'));
+  $$('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$('#'+t.dataset.v).classList.add('active');
+  if(t.dataset.v==='map')initMap();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+/* countdown */
+(function(){const s=dt('2026-08-27')-new Date();
+  $('#cd').textContent = s>0 ? Math.ceil(s/864e5)+' ימים ליציאה' : '🌸 בדרך!';})();
+
+/* ===== TRIP TIMELINE ===== */
+function checkTimes(hc,d,prevSame,nextSame){
+  if(!hc)return null;
+  if(!prevSame)return {l:'צ׳ק-אין',t:hc.inT||'—'};
+  if(!nextSame)return {l:'צ׳ק-אאוט',t:hc.outT||'—'};
+  return null;
+}
+function buildTrip(){
+  const c=$('#tripList');c.innerHTML='';
+  regions.forEach(r=>{
+    const days=DATA.days.filter(d=>d.region===r);if(!days.length)return;
+    const col=rc(r);
+    const rh=document.createElement('div');rh.className='reg';
+    rh.innerHTML='<span class="reg-dot" style="background:'+col+'"></span><h2>'+regionShort(r)+'</h2><span class="n">'+regionNights(r)+'</span>';
+    c.appendChild(rh);
+    const tl=document.createElement('div');tl.className='tl';
+    days.forEach((d,i)=>{
+      const hc=findHotelConf(d.hotel), fl=flightForDay(d.day);
+      const prev=DATA.days.find(x=>x.day===d.day-1), next=DATA.days.find(x=>x.day===d.day+1);
+      const prevSame=prev&&prev.hotel===d.hotel, nextSame=next&&next.hotel===d.hotel;
+      const ct=fl?{l:'טיסה',t:(fl.fromTime.split('·')[1]||'').trim()}:checkTimes(hc,d,prevSame,nextSame);
+      const el=document.createElement('div');el.className='day';el.id='day'+d.day;
+      const dd=dt(d.date);
+      let badges='';
+      if(fl)badges+='<span class="bdg fly">✈️ טיסה</span>';
+      else if(hc)badges+= hc.missing?'<span class="bdg warn">אישור חסר</span>':'<span class="bdg ok">✓ מאושר</span>';
+      if(hc&&hc.bf===true)badges+='<span class="bdg bf">🍳 ארוחת בוקר</span>';
+      if(d.date==='2026-08-31')badges+='<span class="bdg" style="background:#fdeaee;color:var(--accent)">🎂 יום ההולדת של רונית</span>';
+      extrasForDay(d.day).forEach(e=>{badges+='<span class="bdg ok">'+(e.type==='food'?'🍽️':'🎟️')+'</span>';});
+
+      /* --- body --- */
+      let b='';
+      if(fl){
+        b+='<div class="fly"><div class="fly-t"><span>'+fl.airline+'</span><span>'+fl.flightNo+'</span></div>'+
+          '<div class="fly-r"><div><div class="ap">'+fl.from+'</div><div class="tm">'+fl.fromTime+'</div></div>'+
+          '<div class="mid">'+fl.cls+'</div>'+
+          '<div style="text-align:left"><div class="ap">'+fl.to+'</div><div class="tm">'+fl.toTime+'</div></div></div>'+
+          '<div class="fly-code">קוד הזמנה <b>'+fl.code+'</b>'+copyBtn(fl.code)+'</div></div>';
+        if(fl.note)b+='<div class="note">📌 '+fl.note+'</div>';
+      }
+      if(hc){
+        if(hc.conf){
+          b+='<div class="confbox'+(hc.missing?' warnbox':'')+'">'+
+            '<div class="confrow">🎫 מספר אישור <b>'+hc.conf+'</b>'+copyBtn(hc.conf)+'</div>'+
+            (hc.pin?'<div class="confrow">🔒 קוד PIN <b>'+hc.pin+'</b>'+copyBtn(hc.pin)+'</div>':'')+
+            '<div class="confrow" style="color:var(--muted);font-size:12px">'+hc.platform+'</div></div>';
+        }
+        if(!prevSame)b+=inoutBox(hc);
+        const g=[];
+        g.push('<div><div class="k">מלון</div><div class="v sm">'+d.hotel+'</div></div>');
+        if(hc.bfText)g.push('<div><div class="k">ארוחת בוקר</div><div class="v sm" style="color:'+(hc.bf?'var(--ok)':'var(--warn)')+'">'+(hc.bf?'✓ ':'✕ ')+hc.bfText+'</div></div>');
+        if(hc.phone)g.push('<div><div class="k">טלפון</div><div class="v sm">'+hc.phone+'</div></div>');
+        b+='<div class="dgrid">'+g.join('')+'</div>';
+      }
+      extrasForDay(d.day).forEach(e=>{b+=extraCard(e);});
+      if(d.transport)b+='<div class="blk"><div class="bt">תחבורה</div><div class="bc">'+d.transport+'</div></div>';
+      b+='<div class="acts">'+
+        (d.hotel&&d.hotel!=='—'?'<a class="chip" target="_blank" rel="noopener" href="'+mapsLink(d.hotel+' '+d.dest)+'">📍 ניווט למלון</a>':'')+
+        '<a class="chip" target="_blank" rel="noopener" href="'+mapsLink(d.dest)+'">🗺️ '+d.dest+' במפה</a>'+
+        (hc&&hc.phone?'<a class="chip" href="tel:'+hc.phone.replace(/[^+\d]/g,'')+'">📞 חיוג למלון</a>':'')+'</div>';
+      if(hc&&hc.note)b+='<div class="note">📌 '+hc.note+'</div>';
+      if(d.notes)b+='<div class="note">⚠️ '+d.notes+'</div>';
+
+      el.innerHTML=
+        '<div class="day-rail"><div class="day-node" style="border-color:'+col+'"></div>'+
+          (ct?'<div class="rl">'+ct.l+'</div><div class="rt">'+ct.t+'</div>':'')+'</div>'+
+        '<div class="card"><div class="dhead">'+
+          '<div class="dnum"><span>יום</span><b>'+d.day+'</b></div>'+
+          '<div class="dmain"><div class="dtop"><span class="dest">'+d.dest+'</span>'+badges+'</div>'+
+            '<div class="dwhen">'+fmtD(d.date)+' · יום '+DW[dd.getDay()]+'</div>'+
+            (d.hotel&&d.hotel!=='—'?'<div class="dhotel">🏨 '+d.hotel.split('(')[0].trim()+'</div>':'')+
+          '</div><div class="chev">▾</div></div>'+
+          '<div class="dbody"><div class="dbody-in">'+b+'</div></div></div>';
+      const hd=el.querySelector('.dhead'),bd=el.querySelector('.dbody');
+      hd.onclick=()=>{el.classList.toggle('open');
+        bd.style.maxHeight=el.classList.contains('open')?bd.scrollHeight+40+'px':0;};
+      tl.appendChild(el);
+    });
+    c.appendChild(tl);
+  });
+}
+buildTrip();
+/* day pills */
+$('#daystrip').innerHTML=DATA.days.map(d=>{const dd=dt(d.date);
+  return '<div class="dpill" data-d="'+d.day+'"><b>'+dd.getDate()+'</b><span>'+MH[dd.getMonth()]+'</span></div>';}).join('');
+$$('#daystrip .dpill').forEach(p=>p.onclick=()=>{
+  $$('#daystrip .dpill').forEach(x=>x.classList.remove('on'));p.classList.add('on');
+  const el=$('#day'+p.dataset.d);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!el.classList.contains('open'))el.querySelector('.dhead').click();}
+});
+
+/* ===== WALLET ===== */
+(function(){
+  const ok=HOTELS.filter(h=>!h.missing).length, miss=HOTELS.filter(h=>h.missing).length;
+  let H='<div class="stats">'+
+    '<div class="stat"><div class="k">טיסות</div><div class="v">'+FLIGHTS.length+'</div></div>'+
+    '<div class="stat"><div class="k">מלונות מאושרים</div><div class="v">'+ok+' / '+HOTELS.length+'</div></div>'+
+    '<div class="stat"><div class="k">חסר אישור</div><div class="v">'+miss+'</div></div>'+
+    '<div class="stat"><div class="k">רכב</div><div class="v">1</div></div></div>';
+  /* --- Visit Japan Web QR --- */
+  const qrPerson=(who,file,link)=>
+    '<div style="flex:1;min-width:190px;text-align:center">'+
+      '<div style="font-weight:800;font-size:13.5px;margin-bottom:7px">'+who+'</div>'+
+      '<img src="'+file+'" alt="QR '+who+'" style="width:100%;max-width:210px;border:1px solid var(--line);'+
+        'border-radius:12px;background:#fff;padding:8px" '+
+        'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'">'+
+      '<div style="display:none;border:1px dashed var(--line);border-radius:12px;padding:22px 12px;'+
+        'font-size:12px;color:var(--muted);font-weight:600;line-height:1.6">אין עדיין תמונה<br>'+
+        'שמור צילום מסך בשם<br><b style="color:var(--ink)">'+file+'</b><br>בתיקיית האתר</div>'+
+      (link?'<a class="chip" style="margin-top:9px" target="_blank" rel="noopener" href="'+link+'">🛂 פתח באתר</a>':'')+
+    '</div>';
+  H+='<div class="sec">🛂 כניסה ליפן — Visit Japan Web</div>'+
+    '<div class="card" style="padding:16px;margin-bottom:10px">'+
+      '<div class="dtop"><span class="dest">קוד QR להגירה + מכס</span><span class="bdg ok">✓ בן רשום</span></div>'+
+      '<div class="dwhen">נסרק בנריטה ביום הנחיתה · 27.8</div>'+
+      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">'+
+        qrPerson('בן','qr_ben.png','https://www.vjw.digital.go.jp/main/#/vjwpic026')+
+        qrPerson('רונית','qr_ronit.png','https://www.vjw.digital.go.jp/main/#/vjwpic026')+
+      '</div>'+
+      '<div class="note">קוד אחד משולב להגירה ולמכס · אי אפשר לחלוק QR — לכל אחד קוד משלו · '+
+      'לא חובה: בלי VJW ממלאים טופס נייר במטוס, אבל אז עוברים בשני מסלולים שונים · '+
+      '⚠️ לצלם מסך לפני הטיסה, בנריטה לא תמיד יש קליטה</div></div>';
+  H+='<div class="sec">✈️ טיסות</div>';
+  FLIGHTS.forEach(f=>{
+    H+='<div class="card" style="margin-bottom:10px;padding:14px 15px">'+
+      '<div class="fly" style="margin:0">'+
+      '<div class="fly-t"><span>'+f.airline+'</span><span>'+f.flightNo+'</span></div>'+
+      '<div class="fly-r"><div><div class="ap">'+f.from+'</div><div class="tm">'+f.fromTime+'</div></div>'+
+      '<div class="mid">'+f.cls+'</div>'+
+      '<div style="text-align:left"><div class="ap">'+f.to+'</div><div class="tm">'+f.toTime+'</div></div></div>'+
+      '<div class="fly-code">קוד הזמנה <b>'+f.code+'</b>'+copyBtn(f.code)+'</div></div>'+
+      (f.note?'<div class="blk" style="border:0;padding-bottom:0"><div class="bc" style="font-size:12.5px;color:var(--muted)">📌 '+f.note+'</div></div>':'')+
+      '</div>';
+  });
+  H+='<div class="sec">🚗 רכב שכור</div>'+
+    '<div class="card" style="padding:15px"><div class="dtop"><span class="dest">'+CAR.name+'</span><span class="bdg ok">✓ מאושר</span></div>'+
+    '<div class="confbox" style="margin-top:11px"><div class="confrow">🎫 מספר הזמנה <b>'+CAR.res+'</b>'+copyBtn(CAR.res)+'</div></div>'+
+    '<div class="dgrid" style="border:0">'+
+      '<div><div class="k">רכב</div><div class="v sm">'+CAR.car+'</div></div>'+
+      '<div><div class="k">איסוף</div><div class="v sm">'+CAR.pickup+'</div></div>'+
+      '<div><div class="k">החזרה</div><div class="v sm">'+CAR.ret+'</div></div>'+
+      '<div><div class="k">טלפון תחנה</div><div class="v sm">'+CAR.pickupPhone+'</div></div>'+
+      '<div><div class="k">מחיר</div><div class="v">'+CAR.price+'</div></div></div>'+
+    '<div class="acts"><a class="chip" target="_blank" rel="noopener" href="'+mapsLink('Toyota Rent a Car Odawara Station')+'">📍 תחנת האיסוף</a>'+
+    '<a class="chip" href="tel:'+CAR.pickupPhone.replace(/[^\d]/g,'')+'">📞 חיוג</a></div></div>';
+  H+='<div class="sec">🎟️ פעילויות ומסעדות</div>';
+  EXTRAS.forEach(e=>{H+=extraCard(e);});
+  H+='<div class="sec">🛡️ ביטוח</div>'+
+    '<div class="card" style="padding:15px;margin-bottom:10px">'+
+    '<div class="dtop"><span class="dest">'+INSURANCE.name+'</span><span class="bdg ok">✓ נרכש</span></div>'+
+    '<div class="dwhen">'+INSURANCE.bought+'</div>'+
+    '<div class="dgrid" style="margin-top:10px">'+
+      '<div><div class="k">הפוליסה</div><div class="v sm">'+INSURANCE.app+'</div></div>'+
+      '<div><div class="k">רופא בחו״ל</div><div class="v sm">'+INSURANCE.doctor+'</div></div>'+
+      '<div><div class="k">כבודה</div><div class="v sm">'+INSURANCE.baggage+'</div></div>'+
+      '<div><div class="k">שינויים</div><div class="v sm">'+INSURANCE.edit+'</div></div></div>'+
+    '<div class="note">⚠️ כדאי לוודא:<br>• '+INSURANCE.verify.join('<br>• ')+'</div></div>';
+  H+='<div class="sec">🏨 מלונות ('+HOTELS.length+')</div>';
+  HOTELS.forEach(h=>{
+    H+='<div class="card" style="margin-bottom:10px;padding:15px">'+
+      '<div class="dtop"><span class="dest">'+h.name+'</span>'+
+        (h.missing?'<span class="bdg warn">אישור חסר</span>':'<span class="bdg ok">✓ מאושר</span>')+
+        (h.bf===true?'<span class="bdg bf">🍳 ארוחת בוקר</span>':'')+'</div>'+
+      '<div class="dwhen">'+h.city+'</div>'+
+      (h.conf?'<div class="confbox" style="margin-top:11px">'+
+        '<div class="confrow">🎫 מספר אישור <b>'+h.conf+'</b>'+copyBtn(h.conf)+'</div>'+
+        (h.pin?'<div class="confrow">🔒 קוד PIN <b>'+h.pin+'</b>'+copyBtn(h.pin)+'</div>':'')+
+        '<div class="confrow" style="color:var(--muted);font-size:12px">'+h.platform+'</div></div>'
+        :'<div class="confbox warnbox" style="margin-top:11px"><div class="confrow">⚠️ אין אישור במייל</div></div>')+
+      inoutBox(h)+
+      '<div class="dgrid" style="border:0">'+
+        (h.bfText?'<div><div class="k">ארוחת בוקר</div><div class="v sm" style="color:'+(h.bf?'var(--ok)':'var(--warn)')+'">'+(h.bf?'✓ ':'✕ ')+h.bfText+'</div></div>':'')+
+        (h.phone?'<div><div class="k">טלפון</div><div class="v sm">'+h.phone+'</div></div>':'')+'</div>'+
+      '<div class="acts"><a class="chip" target="_blank" rel="noopener" href="'+mapsLink(h.name+' '+h.city)+'">📍 ניווט</a>'+
+        (h.phone?'<a class="chip" href="tel:'+h.phone.replace(/[^+\d]/g,'')+'">📞 חיוג</a>':'')+'</div>'+
+      (h.note?'<div class="note">📌 '+h.note+'</div>':'')+'</div>';
+  });
+  $('#walletC').innerHTML=H;
+})();
+
+/* ===== CHECKLIST ===== */
+const LS='benronit_hm_v3';
+let sv=JSON.parse(localStorage.getItem(LS)||'{}');
+DATA.checklist.forEach((c,i)=>{if(!(i in sv))sv[i]=String(c.status).includes('✅');});
+const dlc=d=>{d=String(d||'');return d.includes('דחיפות')?'u':(/לפני|שבוע|חודש|\+3|2 חוד/.test(d)?'s':'c');};
+let pf='all';
+function renderP(){
+  const L=$('#pList');L.innerHTML='';let n=0;
+  [...new Set(DATA.checklist.map(c=>c.cat))].forEach(cat=>{
+    let it=DATA.checklist.map((c,i)=>({...c,i})).filter(c=>c.cat===cat);
+    if(pf==='todo')it=it.filter(c=>!sv[c.i]);
+    if(pf==='done')it=it.filter(c=>sv[c.i]);
+    if(pf==='urgent')it=it.filter(c=>dlc(c.deadline)==='u'&&!sv[c.i]);
+    if(!it.length)return;
+    const h=document.createElement('div');h.className='sec';h.textContent=cat;L.appendChild(h);
+    it.forEach(c=>{n++;
+      const e=document.createElement('div');e.className='ck'+(sv[c.i]?' done':'');
+      e.innerHTML='<div class="box">✓</div><div class="t"><div class="tt">'+c.task+'</div>'+
+        (c.notes?'<div class="tn">'+c.notes+'</div>':'')+'</div>'+
+        (c.deadline&&!sv[c.i]?'<span class="dl '+dlc(c.deadline)+'">'+c.deadline+'</span>':'');
+      e.onclick=()=>{sv[c.i]=!sv[c.i];localStorage.setItem(LS,JSON.stringify(sv));renderP();upP();};
+      L.appendChild(e);});
+  });
+  if(!n)L.innerHTML='<div style="text-align:center;color:var(--muted);padding:34px;font-weight:600">אין משימות כאן 🎉</div>';
+}
+function upP(){const t=DATA.checklist.length,d=DATA.checklist.filter((_,i)=>sv[i]).length;
+  $('#pbar').style.width=Math.round(d/t*100)+'%';$('#pcnt').textContent=d+'/'+t+' · '+Math.round(d/t*100)+'%';}
+$('#pf').innerHTML=[['all','הכל'],['todo','לביצוע'],['urgent','⚠️ דחוף'],['done','בוצע']]
+  .map((x,i)=>'<button class="tab'+(i===0?' active':'')+'" data-f="'+x[0]+'">'+x[1]+'</button>').join('');
+$$('#pf .tab').forEach(b=>b.onclick=()=>{$$('#pf .tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');pf=b.dataset.f;renderP();});
+$('#preset').onclick=()=>{if(confirm('לאפס את הסימונים למצב המקורי?')){
+  sv={};DATA.checklist.forEach((c,i)=>sv[i]=String(c.status).includes('✅'));
+  localStorage.setItem(LS,JSON.stringify(sv));renderP();upP();}};
+renderP();upP();
+
+/* ===== BUDGET ===== */
+const bcat=(()=>{const m={};DATA.budget.forEach(b=>{if(!b.cat||typeof b.nis!=='number')return;
+  const k=b.cat.trim();m[k]=(m[k]||0)+b.nis;});
+  return Object.entries(m).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]);})();
+new Chart($('#bch'),{type:'bar',data:{labels:bcat.map(c=>c[0]),
+  datasets:[{data:bcat.map(c=>c[1]),backgroundColor:['#6b5bd2','#0a9ba8','#e0526e','#c77700','#0f9d68','#8b90a0','#514296'],borderRadius:6}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nis(c.raw)}}},
+    scales:{x:{ticks:{callback:v=>'₪'+v/1000+'k',font:{family:'Heebo',size:11}},grid:{color:'#f1f2f6'}},
+      y:{ticks:{font:{family:'Heebo',size:12}},grid:{display:false}}}}});
+const bg={};DATA.budget.forEach(b=>{if(!b.cat)return;(bg[b.cat.trim()]=bg[b.cat.trim()]||[]).push(b);});
+$('#bList').innerHTML=Object.entries(bg).map(e=>{
+  const sum=e[1].reduce((a,b)=>a+(typeof b.nis==='number'?b.nis:0),0);
+  return '<div class="bcat"><div class="bch"><span>'+e[0]+'</span><span>'+nis(sum)+'</span></div><div class="bci">'+
+    e[1].map(b=>{
+      let tag='';
+      if(b.notes&&String(b.notes).includes('מאושר'))tag='<span class="bdg ok" style="margin-left:6px">מאושר</span>';
+      else if(b.notes&&String(b.notes).includes('⚠️'))tag='<span class="bdg warn" style="margin-left:6px">לא הוזמן</span>';
+      const sub=[b.orig&&b.orig!=='—'?b.orig:'',b.notes&&!String(b.notes).includes('מאושר')?b.notes:''].filter(Boolean).join(' · ');
+      return '<div class="bi"><div class="n">'+b.item+(sub?'<s>'+sub+'</s>':'')+'</div><div class="a">'+tag+nis(b.nis)+'</div></div>';
+    }).join('')+'</div></div>';}).join('');
+$$('#bList .bch').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
+$('#gt').textContent=nis(DATA.budget_total.nis);
+
+/* ===== MAP ===== */
+const COORDS={'טוקיו':[35.6717,139.7640],'האקונה':[35.2329,139.1069],'מצומוטו':[36.2381,137.9720],
+  "קאמיקוצ'י":[36.2516,137.6380],'קנאזאווה':[36.5613,136.6562],'קיוטו':[35.0116,135.7681],
+  'קוראשיקי':[34.5980,133.7710],'נאושימה':[34.4575,133.9970],'אוסקה':[34.6937,135.5023],
+  'קו סמוי':[9.5690,100.0510],'קו פנגן':[9.7280,99.9850],'קו טאו':[10.0950,99.8400],'בנגקוק':[13.7205,100.5145]};
+let mi=false,LM=null;
+function initMap(){
+  if(mi){LM.invalidateSize();return;} if(typeof L==='undefined')return; mi=true;
+  const stops=[];let cur=null;
+  DATA.days.forEach(d=>{if(!COORDS[d.dest]){cur=null;return;}
+    if(cur&&cur.dest===d.dest){cur.end=d.date;cur.n++;if((!cur.hotel||cur.hotel==='—')&&d.hotel&&d.hotel!=='—')cur.hotel=d.hotel;}
+    else{cur={dest:d.dest,start:d.date,end:d.date,n:1,hotel:(d.hotel&&d.hotel!=='—')?d.hotel:'',region:d.region,ll:COORDS[d.dest]};stops.push(cur);}});
+  LM=L.map('mapEl',{scrollWheelZoom:true});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:18,attribution:'Tiles © Esri'}).addTo(LM);
+  const jp=stops.filter(s=>s.ll[0]>20).map(s=>s.ll), th=stops.filter(s=>s.ll[0]<20).map(s=>s.ll);
+  if(jp.length>1)L.polyline(jp,{color:'#6b5bd2',weight:3,opacity:.65}).addTo(LM);
+  if(th.length>1)L.polyline(th,{color:'#0a9ba8',weight:3,opacity:.65}).addTo(LM);
+  if(jp.length&&th.length)L.polyline([jp[jp.length-1],th[0]],{color:'#aaa',weight:2,dashArray:'6,7',opacity:.6}).addTo(LM);
+  const lay={hotel:L.layerGroup(),sight:L.layerGroup(),food:L.layerGroup()},pts=[];
+  stops.forEach((s,i)=>{const col=rc(s.region);pts.push(s.ll);
+    const hc=findHotelConf(s.hotel);
+    const dr=fmtD(s.start)+(s.start!==s.end?' – '+fmtD(s.end):'');
+    let p='<div class="pop-t">'+s.dest+'</div><div class="pop-s">'+dr+' · '+s.n+' לילות</div>';
+    if(s.hotel)p+='<div class="pop-r">🏨 '+s.hotel.split('(')[0].trim()+'</div>';
+    if(hc&&hc.conf)p+='<div class="pop-r">🎫 '+hc.conf+(hc.pin?' · PIN '+hc.pin:'')+'</div>';
+    if(hc&&hc.bf!=null)p+='<div class="pop-r" style="color:'+(hc.bf?'#0f9d68':'#c77700')+'">'+(hc.bf?'🍳 ':'✕ ')+hc.bfText+'</div>';
+    p+='<a class="pop-go" target="_blank" rel="noopener" href="'+mapsLink((s.hotel||'')+' '+s.dest)+'">📍 גוגל מפות</a>';
+    L.marker(s.ll,{icon:L.divIcon({className:'',html:'<div class="map-pin" style="background:'+col+'"><b>'+(i+1)+'</b></div>',
+      iconSize:[27,27],iconAnchor:[13,27],popupAnchor:[0,-27]})}).bindPopup(p).addTo(lay.hotel);});
+  const dr={};DATA.days.forEach(d=>{if(!dr[d.dest])dr[d.dest]=d.region;});
+  POIS.forEach(o=>{pts.push(o.ll);const col=rc(dr[o.c]||regions[0]);
+    const p='<div class="pop-t">'+o.n+'</div><div class="pop-s">'+(o.t==='f'?'🍽️ מסעדה':'📸 אתר')+' · '+o.c+'</div>'+
+      '<a class="pop-go" target="_blank" rel="noopener" href="'+mapsLink(o.n+' '+o.c)+'">📍 גוגל מפות</a>';
+    const m=o.t==='f'
+      ? L.marker(o.ll,{icon:L.divIcon({className:'',html:'<div class="poi-food">🍴</div>',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-10]})})
+      : L.circleMarker(o.ll,{radius:5.5,weight:2,color:'#fff',fillColor:col,fillOpacity:.95});
+    m.bindPopup(p).addTo(o.t==='f'?lay.food:lay.sight);});
+  lay.hotel.addTo(LM);lay.sight.addTo(LM);lay.food.addTo(LM);
+  LM.fitBounds(pts,{padding:[35,35]});
+  $('#mlg').innerHTML='<span><i style="background:#6b5bd2"></i>יפן</span><span><i style="background:#0a9ba8"></i>תאילנד</span>'+
+    '<span>📍 מספר = מלון</span><span>● אתר</span><span>🍴 מסעדה</span>';
+  $('#mapf').innerHTML='<button class="tab active" data-t="hotel">🏨 מלונות</button><button class="tab active" data-t="sight">📸 אתרים</button>'+
+    '<button class="tab active" data-t="food">🍽️ מסעדות</button><button class="tab" data-z="jp">🌸 יפן</button>'+
+    '<button class="tab" data-z="th">🌴 תאילנד</button><button class="tab" data-z="all">🌏 הכל</button>';
+  $$('#mapf .tab').forEach(b=>b.onclick=()=>{
+    if(b.dataset.t){b.classList.toggle('active');
+      b.classList.contains('active')?lay[b.dataset.t].addTo(LM):LM.removeLayer(lay[b.dataset.t]);}
+    else{const z=b.dataset.z;let q=pts;if(z==='jp')q=pts.filter(p=>p[0]>20);if(z==='th')q=pts.filter(p=>p[0]<20);
+      LM.fitBounds(q,{padding:[35,35]});}});
+  setTimeout(()=>LM.invalidateSize(),200);
+}
+</script>
+</body>
+</html>

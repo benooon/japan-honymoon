@@ -1,0 +1,21 @@
+node_modules/
+npm-debug.log*
+.DS_Store
+.env
+.env.*
+*.log
+
+# scratch / generated working files
+_*.html
+_*.js
+_*.json
+
+# Claude Code session files
+.audit-key
+audit.jsonl
+.claude/
+
+# Claude Code working directories (not part of the deployed app)
+outputs/
+uploads/
+uploads-tmp/
