@@ -17,11 +17,38 @@ Single-page dashboard for a 35-day honeymoon: Japan → Thailand, 27 Aug – 1 O
 | `qr_ben.png`, `qr_ronit.png` | Visit Japan Web immigration + customs QR codes. |
 | `trip_sheet.csv` | Flat day-by-day table (day, date, city, hotel, confirmation, PIN). |
 | `hotel_honeymoon_messages.md` | Prepared "we're on our honeymoon" messages for all 13 hotels. |
+| `data/statements/*.xlsx` | Raw credit-card statement exports used to build the "בפועל" (actual expenses) tab. |
+| `scripts/build_expenses.py` | Parses `data/statements/`, categorizes Japan-trip transactions, writes `DATA.expenses` into `index.html`. |
 | `.github/workflows/deploy.yml` | CI: verifies the build, then deploys to Railway. |
 
-The dashboard has five tabs: **מסלול** (day-by-day timeline), **אישורים** (all
+The dashboard has six tabs: **מסלול** (day-by-day timeline), **אישורים** (all
 confirmations + QR codes), **מפה** (interactive map, 76 pins), **הכנות**
-(checklist with local persistence), **תקציב** (budget).
+(checklist with local persistence), **תקציב** (planned budget), **💳 בפועל**
+(actual expenses — parsed from real credit-card statements, categorized, with
+daily average and foreign-currency-fee savings).
+
+### Keeping "בפועל" (actual expenses) up to date
+
+Every time you have a new statement export from any card (Isracard/CAL
+"פירוט עסקאות" export, or a Leumi Card "transaction details" export):
+
+1. Drop the `.xlsx` file into `data/statements/`.
+2. Run:
+   ```bash
+   python3 scripts/build_expenses.py
+   ```
+   (needs `openpyxl`: `pip install openpyxl`)
+3. It re-parses **everything** in `data/statements/` from scratch, keeps only
+   transactions that were actually made in Japan (JPY currency, a Japan
+   merchant/city name, or a hotel booking/eSIM tied to the trip), categorizes
+   them by merchant keyword, dedupes exact repeats across overlapping
+   statements, and rewrites `DATA.expenses` / `DATA.expenses_meta` inside
+   `index.html`.
+4. Commit the new statement file(s) together with the updated `index.html`.
+
+If you'd rather not run it yourself, just upload the new statement file(s) in
+a chat with Claude and ask it to update the actual-expenses tab — it will run
+the same script.
 
 ---
 
