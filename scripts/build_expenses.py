@@ -65,6 +65,7 @@ CATEGORY_RULES = [
         "SEVEN BANK",
     ]),
 ]
+LODGING_CATEGORY = CATEGORY_RULES[0][0]
 CASH_CATEGORY = CATEGORY_RULES[-1][0]
 MISC_CATEGORY = "\U0001F4CB שונות"  # 📋 שונות
 
@@ -261,8 +262,14 @@ def main():
 
     spend_rows = [r for r in rows if r["cat"] != CASH_CATEGORY]
     cash_rows = [r for r in rows if r["cat"] == CASH_CATEGORY]
+    # hotels are booked/paid in lump sums (and tracked separately in the
+    # planned-budget tab) so they'd swamp a "daily spend" average — keep
+    # them in the category totals but out of the daily-average calculation.
+    daily_rows = [r for r in spend_rows if r["cat"] != LODGING_CATEGORY]
 
     total_spend = round(sum(r["nis"] for r in spend_rows), 2)
+    lodging_total = round(sum(r["nis"] for r in spend_rows if r["cat"] == LODGING_CATEGORY), 2)
+    daily_spend_total = round(sum(r["nis"] for r in daily_rows), 2)
     total_cash = round(sum(r["nis"] for r in cash_rows), 2)
     total_fee_savings = round(sum(r.get("fee_discount") or 0 for r in rows), 2)
 
@@ -271,7 +278,7 @@ def main():
         span_days = (datetime.fromisoformat(dates[-1]).date() - datetime.fromisoformat(dates[0]).date()).days + 1
     else:
         span_days = 0
-    daily_avg = round(total_spend / span_days, 2) if span_days else 0
+    daily_avg = round(daily_spend_total / span_days, 2) if span_days else 0
 
     by_cat = {}
     for r in spend_rows:
@@ -279,6 +286,8 @@ def main():
 
     expenses_meta = {
         "total_nis": total_spend,
+        "lodging_nis": lodging_total,
+        "daily_spend_nis": daily_spend_total,
         "cash_withdrawn_nis": total_cash,
         "fee_savings_nis": total_fee_savings,
         "first_date": dates[0] if dates else None,
@@ -313,7 +322,8 @@ def main():
           f"from {len(list(STATEMENTS_DIR.glob('*.xlsx')))} statement file(s)")
     print(f"Total spent in Japan so far: ₪{total_spend:,.2f} "
           f"over {span_days} days ({dates[0] if dates else '-'} .. {dates[-1] if dates else '-'})")
-    print(f"Daily average: ₪{daily_avg:,.2f}/day (₪{expenses_meta['daily_avg_per_person_nis']:,.2f}/person/day)")
+    print(f"  of which lodging (excluded from daily average): ₪{lodging_total:,.2f}")
+    print(f"Daily average (excl. lodging): ₪{daily_avg:,.2f}/day (₪{expenses_meta['daily_avg_per_person_nis']:,.2f}/person/day)")
     print(f"Cash withdrawn (not itemised): ₪{total_cash:,.2f}")
     print(f"Foreign-currency fee discounts (מועדון הנחות) saved: ₪{total_fee_savings:,.2f}")
 
