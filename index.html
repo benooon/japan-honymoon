@@ -1835,13 +1835,15 @@ const DATA = {
  ],
  "expenses_meta": {
   "total_nis": 14868.71,
+  "lodging_nis": 6297.03,
+  "daily_spend_nis": 8571.68,
   "cash_withdrawn_nis": 569.59,
   "fee_savings_nis": 145.45,
   "first_date": "2026-08-26",
   "last_date": "2026-09-04",
   "days_span": 10,
-  "daily_avg_nis": 1486.87,
-  "daily_avg_per_person_nis": 743.43,
+  "daily_avg_nis": 857.17,
+  "daily_avg_per_person_nis": 428.58,
   "by_category": [
    {
     "cat": "🏨 מלונות",
@@ -2373,9 +2375,9 @@ if(DATA.expenses&&DATA.expenses.length){
   const EM=DATA.expenses_meta;
   const spend=DATA.expenses.filter(e=>e.cat.indexOf('מזומן')===-1);
   $('#eStats').innerHTML=[
-    ['סה"כ בפועל ביפן',nis(EM.total_nis),EM.days_span+' ימים'],
-    ['ממוצע ליום (זוג)',nis(EM.daily_avg_nis),'ל'+EM.days_span+' ימים עד כה'],
-    ['ממוצע ליום (לאדם)',nis(EM.daily_avg_per_person_nis),''],
+    ['סה"כ בפועל ביפן',nis(EM.total_nis),'כולל '+nis(EM.lodging_nis)+' מלונות'],
+    ['ממוצע ליום (זוג)',nis(EM.daily_avg_nis),'לא כולל מלונות · '+EM.days_span+' ימים עד כה'],
+    ['ממוצע ליום (לאדם)',nis(EM.daily_avg_per_person_nis),'לא כולל מלונות'],
     ['נמשך מזומן',nis(EM.cash_withdrawn_nis),'לא כלול בסה"כ'],
     ['חסכתם בעמלות המרה',nis(EM.fee_savings_nis),'מועדון הנחות'],
   ].map(s=>'<div class="stat'+(s[0].includes('חסכתם')?' ok':'')+'"><div class="l">'+s[0]+'</div><div class="v">'+s[1]+'</div>'+
